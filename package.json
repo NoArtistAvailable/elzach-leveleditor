@@ -19,7 +19,7 @@
 	{
 	    "sample": "sample",
 	    "description": "This is a sample showing the level editor.",
-	    "path": "Samples/SampleScene"
+	    "path": "Samples"
 	}
   ]
 }
