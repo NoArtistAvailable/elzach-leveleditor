@@ -17,7 +17,7 @@ MonoBehaviour:
   behaviour: {fileID: 11400000, guid: 979d5122e7e5ceb4bbda068afcebbfb5, type: 2}
   size:
     x: 1
-    y: 1
+    y: 4
     z: 1
   variants:
   - prefab: {fileID: 3917155598774353213, guid: d5dce947967ca044ea836f585fb1032a, type: 3}
