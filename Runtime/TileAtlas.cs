@@ -7,6 +7,7 @@ using elZach.common;
 
 namespace elZach.LevelEditor
 {
+    [CreateAssetMenu(menuName="LevelEditor/TileAtlas")]
     public class TileAtlas : ScriptableObject
     {
         public List<TileObject> tiles;
