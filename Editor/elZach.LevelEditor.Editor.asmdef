@@ -1,0 +1,20 @@
+{
+    "name": "elZach.LevelEditor.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:31769fc9d35998c4392e3bc3bfbc9384",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:78a63bc527d520e45b2744e4f6e054bf"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

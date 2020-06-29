@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda8c512f313cec41b7cd18bd9ec2644, type: 3}
+  m_Name: CapsuleStatue
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 7261736369866193204, guid: 3b1e9013005828d44b34837e9ba66e13, type: 3}
+  guid: c4f66d9d-7c00-45dd-8cc1-10dddf75b62d
+  behaviour: {fileID: 11400000, guid: a3160e6a67012f34eb5e7081f79a02fd, type: 2}
+  size:
+    x: 2
+    y: 3
+    z: 2
+  variants: []

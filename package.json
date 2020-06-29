@@ -1,0 +1,25 @@
+{
+  "name": "elzach-leveleditor",
+  "description": "Basic Level Editor for Unity in analog to grid based 2D Editors",
+  "author": { "name":"elZach", "email":"dontmessageme","url":"-" },
+  "version": "0.0.1",
+  "unity": "2020.2",
+  "unityRelease":"0a15",
+  "displayName": "elZach LevelEditor",
+  "keywords": [ "unity" ],
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/felix.reinemann/elzach-leveleditor.git"
+  },
+  "dependencies": {
+	"elzach.extensions": "0.0.1",
+	"com.unity.mathematics": "1.1.0"
+  },
+  "samples": [
+	{
+	    "sample": "sample",
+	    "description": "This is a sample showing the level editor.",
+	    "path": "Samples/SampleScene"
+	}
+  ]
+}
