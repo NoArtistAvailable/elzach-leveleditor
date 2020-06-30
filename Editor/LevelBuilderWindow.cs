@@ -191,9 +191,13 @@ namespace elZach.LevelEditor
                 }
                 if (painting)
                 {
-                    Vector3 handle = Handles.PositionHandle(new Vector3(-Mathf.FloorToInt(floorSize.x / 2 * rasterSize.x), targetHeigth, -Mathf.FloorToInt(floorSize.z / 2 * rasterSize.z)), Quaternion.identity);
-                    t.ChangeFloorBoundaries(new int3(Mathf.FloorToInt(handle.x * -2), floorSize.y, Mathf.FloorToInt(handle.z * -2)), activeLayer);
-                    targetHeigth = Mathf.Clamp(Mathf.FloorToInt(handle.y), -floorSize.y, floorSize.y);
+                    Vector3 handleStart = new Vector3(-Mathf.FloorToInt(floorSize.x / 2 * rasterSize.x) , targetHeigth, -Mathf.FloorToInt(floorSize.z / 2 * rasterSize.z));
+                    Vector3 handle = Handles.PositionHandle(handleStart, Quaternion.identity);
+                    if (!Mathf.Approximately(handle.x,handleStart.x) || !Mathf.Approximately(handle.y,handleStart.y) || !Mathf.Approximately(handle.z,handleStart.z))
+                    {
+                        t.ChangeFloorBoundaries(new int3(Mathf.FloorToInt(handle.x * -2 / rasterSize.x), floorSize.y, Mathf.FloorToInt(handle.z * -2 / rasterSize.z)), activeLayer);
+                        targetHeigth = Mathf.Clamp(Mathf.FloorToInt(handle.y), -floorSize.y, floorSize.y);
+                    }
                 }
                 //Handles.FreeMoveHandle(new Vector3(-Mathf.FloorToInt(t.floorSize.x / 2), targetHeigth, -Mathf.FloorToInt(t.floorSize.z / 2)), Quaternion.identity, 1f, Vector3.one);
             }
@@ -269,9 +273,9 @@ namespace elZach.LevelEditor
                 //activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Rastersize");
-                activeLayer.rasterSize.x = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.x);
-                activeLayer.rasterSize.y = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.y);
-                activeLayer.rasterSize.z = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.z);
+                activeLayer.rasterSize.x = EditorGUILayout.FloatField(activeLayer.rasterSize.x);
+                activeLayer.rasterSize.y = EditorGUILayout.FloatField(activeLayer.rasterSize.y);
+                activeLayer.rasterSize.z = EditorGUILayout.FloatField(activeLayer.rasterSize.z);
                 EditorGUILayout.EndHorizontal();
             }
 
