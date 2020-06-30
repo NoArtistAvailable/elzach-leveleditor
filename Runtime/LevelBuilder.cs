@@ -11,18 +11,35 @@ namespace elZach.LevelEditor
     [ExecuteAlways]
     public class LevelBuilder : MonoBehaviour
     {
-        [Header("Settings")]
-        public float3 rasterSize = new Vector3(1, 4, 1);
         [Header("Setup")]
-        public TileAtlas tileSet;        
-        public int3 floorSize = new int3(20, 1, 20);
+        public TileAtlas tileSet;
+        public Vector3 floorBoundaries = new Vector3(20, 5, 20);
+
+        public int3 FloorSize(TileAtlas.TagLayer layer)
+        {
+            return new int3(
+                Mathf.FloorToInt(floorBoundaries.x / layer.rasterSize.x),
+                Mathf.FloorToInt(floorBoundaries.y / layer.rasterSize.y),
+                Mathf.FloorToInt(floorBoundaries.z / layer.rasterSize.z));
+        }
+
+        public void ChangeFloorBoundaries(int3 floorSize, TileAtlas.TagLayer layer)
+        {
+            floorBoundaries = new Vector3(
+                floorSize.x * layer.rasterSize.x,
+                floorSize.y * layer.rasterSize.y,
+                floorSize.z * layer.rasterSize.z
+                );
+        }
 
         public List<SerializableDictionary<int3, PlacedTile>> layers = new  List<SerializableDictionary<int3, PlacedTile>>();
 
-        public bool TilePositionInFloorSize(int3 tilePos)
+        public bool TilePositionInFloorSize(int3 tilePos, TileAtlas.TagLayer layer)
         {
-            int halfX = Mathf.FloorToInt(floorSize.x / 2f);
-            int halfZ = Mathf.FloorToInt(floorSize.z / 2f);
+            var floorSize = FloorSize(layer);
+            var rasterSize = layer.rasterSize;
+            int halfX = Mathf.FloorToInt(floorSize.x / 2f); // * rasterSize.x / 2f);
+            int halfZ = Mathf.FloorToInt(floorSize.z / 2f); // * rasterSize.z / 2f);
             if (tilePos.x < -halfX || tilePos.x >= halfX)
                 return false;
             if (tilePos.y < -floorSize.y || tilePos.y > floorSize.y)
@@ -32,13 +49,16 @@ namespace elZach.LevelEditor
             return true;
         }
 
-        public int3 WorldPositionToTilePosition(Vector3 worldPos)
+        public int3 WorldPositionToTilePosition(Vector3 worldPos, TileAtlas.TagLayer layer)
         {
+            var rasterSize = layer.rasterSize;
             var localP = transform.InverseTransformPoint(worldPos);
             return new int3(Mathf.FloorToInt(localP.x / rasterSize.x), Mathf.RoundToInt(localP.y / rasterSize.y), Mathf.FloorToInt(localP.z / rasterSize.z));
         }
-        public Vector3 TilePositionToLocalPosition(int3 tilePos)
+
+        public Vector3 TilePositionToLocalPosition(int3 tilePos, TileAtlas.TagLayer layer)
         {
+            var rasterSize = layer.rasterSize;
             return new Vector3(
                 tilePos.x * rasterSize.x + rasterSize.x * 0.5f,
                 tilePos.y * rasterSize.y,
@@ -46,8 +66,9 @@ namespace elZach.LevelEditor
                 );
         }
 
-        public Vector3 TilePositionToLocalPosition(int3 tilePos, int3 size)
+        public Vector3 TilePositionToLocalPosition(int3 tilePos, int3 size, TileAtlas.TagLayer layer)
         {
+            var rasterSize = layer.rasterSize;
             return new Vector3(
                 tilePos.x * rasterSize.x + rasterSize.x * 0.5f * size.x,
                 tilePos.y * rasterSize.y,
@@ -100,7 +121,7 @@ namespace elZach.LevelEditor
 
             //atlasTile.size
 
-            go.transform.localPosition = TilePositionToLocalPosition(position,atlasTile.size);
+            go.transform.localPosition = TilePositionToLocalPosition(position, atlasTile.size, tileSet.layers[layerIndex]);
             var placedTile = new PlacedTile(guid, position, atlasTile, go);
             for (int x = 0; x < atlasTile.size.x; x++)
                 for (int y = 0; y < atlasTile.size.y; y++)

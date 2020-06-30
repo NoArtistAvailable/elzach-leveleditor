@@ -97,7 +97,7 @@ namespace elZach.LevelEditor
             if(painting) sceneView.Repaint(); // <- is this neccessary? 2020.2.0a15 seems to call repaint just every few OnScenGUI
             DrawRaster();
             OnScreenUI(sceneView);
-            floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up *t.rasterSize.y*targetHeigth);
+            floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up *t.tileSet.layers[layerIndex].rasterSize.y*targetHeigth);
             var e = Event.current;
             if (painting)
             {
@@ -108,14 +108,14 @@ namespace elZach.LevelEditor
                     floorPlane.Raycast(guiRay, out d);
                     Vector3 worldPos = guiRay.GetPoint(d);
                     //Debug.Log("worldPos: " + worldPos+"; mousePos: "+tileMousePosition);
-                    var newTileMousePosition = t.WorldPositionToTilePosition(worldPos);
-                    if (t.TilePositionInFloorSize(newTileMousePosition))
+                    var newTileMousePosition = t.WorldPositionToTilePosition(worldPos, t.tileSet.layers[layerIndex]);
+                    if (t.TilePositionInFloorSize(newTileMousePosition,t.tileSet.layers[layerIndex]))
                         tileMousePosition = newTileMousePosition;
                 }
                 //Handles.DrawWireDisc(t.TilePositionToLocalPosition(tileMousePosition, selectedTile.size), Vector3.up, 0.5f * selectedTile.size.x);
-                Handles.color = Color.white;
+                Handles.color = t.tileSet.layers[layerIndex].color + Color.gray;
                 int3 brushSize = selectedTile ? selectedTile.size : new int3(1, 1, 1);
-                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize) + Vector3.up * brushSize.y * 0.5f, new Vector3(brushSize.x, brushSize.y, brushSize.z));
+                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, t.tileSet.layers[layerIndex]) + Vector3.up * brushSize.y * 0.5f, new Vector3(brushSize.x, brushSize.y, brushSize.z));
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                     DrawTiles(sceneView, e, tileMousePosition);
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
@@ -134,7 +134,8 @@ namespace elZach.LevelEditor
             //targetHeigth = EditorGUILayout.IntSlider(targetHeigth, 0, t.floorSize.y);
             GUILayout.BeginHorizontal();
             GUILayout.Space(10);
-            targetHeigth = Mathf.RoundToInt(GUILayout.VerticalSlider(targetHeigth, t.floorSize.y, -t.floorSize.y, GUILayout.Height(100), GUILayout.Width(12)));
+            var floorSize = t.FloorSize(t.tileSet.layers[layerIndex]);
+            targetHeigth = Mathf.RoundToInt(GUILayout.VerticalSlider(targetHeigth, floorSize.y, -floorSize.y, GUILayout.Height(100), GUILayout.Width(12)));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
@@ -168,25 +169,27 @@ namespace elZach.LevelEditor
 
         void DrawRaster()
         {
+            var rasterSize = t.tileSet.layers[layerIndex].rasterSize;
+            var floorSize = t.FloorSize(t.tileSet.layers[layerIndex]);
             if (rasterVisibility == RasterVisibility.Always || (rasterVisibility == RasterVisibility.WhenPainting && painting))
             {
                 Handles.matrix = t.transform.localToWorldMatrix;
                 Handles.color = new Color(0f, 0.5f, 0.8f, 0.15f);
-                float zOffset = t.rasterSize.z * t.floorSize.z * 0.5f;
-                for (int x = -Mathf.FloorToInt(t.floorSize.x / 2); x < Mathf.CeilToInt(t.floorSize.x / 2); x++)
+                float zOffset = rasterSize.z * floorSize.z * 0.5f;
+                for (int x = -Mathf.FloorToInt(floorSize.x / 2); x < Mathf.CeilToInt(floorSize.x / 2); x++)
                 {
-                    Handles.DrawLine(new Vector3(x * t.rasterSize.x, targetHeigth * t.rasterSize.y, -zOffset), new Vector3(x * t.rasterSize.x, targetHeigth * t.rasterSize.y, zOffset));
+                    Handles.DrawLine(new Vector3(x * rasterSize.x, targetHeigth * rasterSize.y, -zOffset), new Vector3(x * rasterSize.x, targetHeigth * rasterSize.y, zOffset));
                 }
-                float xOffset = t.rasterSize.x * t.floorSize.x * 0.5f;
-                for (int z = -Mathf.FloorToInt(t.floorSize.z / 2); z < Mathf.CeilToInt(t.floorSize.z / 2); z++)
+                float xOffset = rasterSize.x * floorSize.x * 0.5f;
+                for (int z = -Mathf.FloorToInt(floorSize.z / 2); z < Mathf.CeilToInt(floorSize.z / 2); z++)
                 {
-                    Handles.DrawLine(new Vector3(-xOffset, targetHeigth * t.rasterSize.y, z * t.rasterSize.z), new Vector3(xOffset, targetHeigth * t.rasterSize.y, z * t.rasterSize.z));
+                    Handles.DrawLine(new Vector3(-xOffset, targetHeigth * rasterSize.y, z * rasterSize.z), new Vector3(xOffset, targetHeigth * rasterSize.y, z * rasterSize.z));
                 }
                 if (painting)
                 {
-                    Vector3 handle = Handles.PositionHandle(new Vector3(-Mathf.FloorToInt(t.floorSize.x / 2), targetHeigth, -Mathf.FloorToInt(t.floorSize.z / 2)), Quaternion.identity);
-                    t.floorSize = new int3(Mathf.FloorToInt(handle.x * -2), t.floorSize.y, Mathf.FloorToInt(handle.z * -2));
-                    targetHeigth = Mathf.Clamp(Mathf.FloorToInt(handle.y), -t.floorSize.y, t.floorSize.y);
+                    Vector3 handle = Handles.PositionHandle(new Vector3(-Mathf.FloorToInt(floorSize.x / 2), targetHeigth, -Mathf.FloorToInt(floorSize.z / 2)), Quaternion.identity);
+                    t.ChangeFloorBoundaries(new int3(Mathf.FloorToInt(handle.x * -2), floorSize.y, Mathf.FloorToInt(handle.z * -2)),t.tileSet.layers[layerIndex]);
+                    targetHeigth = Mathf.Clamp(Mathf.FloorToInt(handle.y), -floorSize.y, floorSize.y);
                 }
                 //Handles.FreeMoveHandle(new Vector3(-Mathf.FloorToInt(t.floorSize.x / 2), targetHeigth, -Mathf.FloorToInt(t.floorSize.z / 2)), Quaternion.identity, 1f, Vector3.one);
             }
