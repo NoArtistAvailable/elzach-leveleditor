@@ -94,10 +94,11 @@ namespace elZach.LevelEditor
 
         private void OnSceneGUI(SceneView sceneView)
         {
-            if(painting) sceneView.Repaint(); // <- is this neccessary? 2020.2.0a15 seems to call repaint just every few OnScenGUI
+            var activeLayer = layerIndex == -1 ? t.tileSet.defaultLayer : t.tileSet.layers[layerIndex];
+            if (painting) sceneView.Repaint(); // <- is this neccessary? 2020.2.0a15 seems to call repaint just every few OnScenGUI
             DrawRaster();
             OnScreenUI(sceneView);
-            floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up *t.tileSet.layers[layerIndex].rasterSize.y*targetHeigth);
+            floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up * activeLayer.rasterSize.y*targetHeigth);
             var e = Event.current;
             if (painting)
             {
@@ -108,14 +109,14 @@ namespace elZach.LevelEditor
                     floorPlane.Raycast(guiRay, out d);
                     Vector3 worldPos = guiRay.GetPoint(d);
                     //Debug.Log("worldPos: " + worldPos+"; mousePos: "+tileMousePosition);
-                    var newTileMousePosition = t.WorldPositionToTilePosition(worldPos, t.tileSet.layers[layerIndex]);
-                    if (t.TilePositionInFloorSize(newTileMousePosition,t.tileSet.layers[layerIndex]))
+                    var newTileMousePosition = t.WorldPositionToTilePosition(worldPos, activeLayer);
+                    if (t.TilePositionInFloorSize(newTileMousePosition, activeLayer))
                         tileMousePosition = newTileMousePosition;
                 }
                 //Handles.DrawWireDisc(t.TilePositionToLocalPosition(tileMousePosition, selectedTile.size), Vector3.up, 0.5f * selectedTile.size.x);
-                Handles.color = t.tileSet.layers[layerIndex].color + Color.gray;
+                Handles.color = activeLayer.color + Color.gray;
                 int3 brushSize = selectedTile ? selectedTile.size : new int3(1, 1, 1);
-                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, t.tileSet.layers[layerIndex]) + Vector3.up * brushSize.y * 0.5f, new Vector3(brushSize.x, brushSize.y, brushSize.z));
+                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, activeLayer) + Vector3.up * brushSize.y * 0.5f, new Vector3(brushSize.x, brushSize.y, brushSize.z));
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                     DrawTiles(sceneView, e, tileMousePosition);
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
@@ -125,6 +126,8 @@ namespace elZach.LevelEditor
 
         void OnScreenUI(SceneView sceneView)
         {
+            var activeLayer = layerIndex == -1 ? t.tileSet.defaultLayer : t.tileSet.layers[layerIndex];
+
             if (!painting) return;
             Handles.BeginGUI();
             var icon_eye = EditorGUIUtility.IconContent("VisibilityOn");
@@ -134,7 +137,7 @@ namespace elZach.LevelEditor
             //targetHeigth = EditorGUILayout.IntSlider(targetHeigth, 0, t.floorSize.y);
             GUILayout.BeginHorizontal();
             GUILayout.Space(10);
-            var floorSize = t.FloorSize(t.tileSet.layers[layerIndex]);
+            var floorSize = t.FloorSize(activeLayer);
             targetHeigth = Mathf.RoundToInt(GUILayout.VerticalSlider(targetHeigth, floorSize.y, -floorSize.y, GUILayout.Height(100), GUILayout.Width(12)));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -169,8 +172,9 @@ namespace elZach.LevelEditor
 
         void DrawRaster()
         {
-            var rasterSize = t.tileSet.layers[layerIndex].rasterSize;
-            var floorSize = t.FloorSize(t.tileSet.layers[layerIndex]);
+            var activeLayer = layerIndex == -1 ? t.tileSet.defaultLayer : t.tileSet.layers[layerIndex];
+            var rasterSize = activeLayer.rasterSize;
+            var floorSize = t.FloorSize(activeLayer);
             if (rasterVisibility == RasterVisibility.Always || (rasterVisibility == RasterVisibility.WhenPainting && painting))
             {
                 Handles.matrix = t.transform.localToWorldMatrix;
@@ -187,8 +191,8 @@ namespace elZach.LevelEditor
                 }
                 if (painting)
                 {
-                    Vector3 handle = Handles.PositionHandle(new Vector3(-Mathf.FloorToInt(floorSize.x / 2), targetHeigth, -Mathf.FloorToInt(floorSize.z / 2)), Quaternion.identity);
-                    t.ChangeFloorBoundaries(new int3(Mathf.FloorToInt(handle.x * -2), floorSize.y, Mathf.FloorToInt(handle.z * -2)),t.tileSet.layers[layerIndex]);
+                    Vector3 handle = Handles.PositionHandle(new Vector3(-Mathf.FloorToInt(floorSize.x / 2 * rasterSize.x), targetHeigth, -Mathf.FloorToInt(floorSize.z / 2 * rasterSize.z)), Quaternion.identity);
+                    t.ChangeFloorBoundaries(new int3(Mathf.FloorToInt(handle.x * -2), floorSize.y, Mathf.FloorToInt(handle.z * -2)), activeLayer);
                     targetHeigth = Mathf.Clamp(Mathf.FloorToInt(handle.y), -floorSize.y, floorSize.y);
                 }
                 //Handles.FreeMoveHandle(new Vector3(-Mathf.FloorToInt(t.floorSize.x / 2), targetHeigth, -Mathf.FloorToInt(t.floorSize.z / 2)), Quaternion.identity, 1f, Vector3.one);
@@ -261,7 +265,15 @@ namespace elZach.LevelEditor
                 EditorGUILayout.LabelField(activeLayer.name);
 
             if (layerIndex < atlas.layers.Count)
-                activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
+            {
+                //activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Rastersize");
+                activeLayer.rasterSize.x = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.x);
+                activeLayer.rasterSize.y = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.y);
+                activeLayer.rasterSize.z = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.z);
+                EditorGUILayout.EndHorizontal();
+            }
 
             if (activeLayer!= atlas.defaultLayer && activeLayer.layerObjects.Count == 0) { EditorGUILayout.LabelField("Drag and Drop Tiles here."); return; }
 
