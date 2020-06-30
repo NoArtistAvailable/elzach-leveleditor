@@ -10,7 +10,7 @@ namespace elZach.LevelEditor
         public enum RotationBehaviour { None, RotateRandomY = 1 << 1, RotateRandomY90Degree = 1 << 2, AlignToNeighbours = 1 << 3 }
         public RotationBehaviour rotation;
 
-        public void OnPlacement(PlacedTile placedTile, params PlacedTile[] neighbours)
+        public virtual void OnPlacement(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
             switch (rotation)
             {
@@ -26,7 +26,7 @@ namespace elZach.LevelEditor
             }
         }
 
-        public void OnUpdatedNeighbour(PlacedTile placedTile, params PlacedTile[] neighbours)
+        public virtual void OnUpdatedNeighbour(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
             if(rotation == RotationBehaviour.AlignToNeighbours)
                 AlignRotationToNeighbours(placedTile, neighbours);

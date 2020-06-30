@@ -57,7 +57,7 @@ namespace elZach.LevelEditor
             targetHeigth = EditorGUILayout.IntField("Heigth: ", targetHeigth);
             activeLayer = EditorGUILayout.IntField("Layer:", activeLayer);
             EditorGUILayout.EndHorizontal();
-            DrawPalette();
+            DrawPalette(t.tileSet);
             if(GUILayout.Button("Clear Level"))t.ClearLevel(); 
         }
 
@@ -153,23 +153,66 @@ namespace elZach.LevelEditor
 
         string selectedTileGuid;
         int paletteIndex;
+        int layerIndex = -1;
         Vector2 paletteScroll;
-        void DrawPalette()
+        void DrawPalette(TileAtlas atlas)
         {
+            TileAtlas.TagLayer activeLayer = layerIndex == -1 ? atlas.defaultLayer : (layerIndex < atlas.layers.Count) ? atlas.layers[layerIndex] : atlas.defaultLayer;
+
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.BeginVertical();
+            Color guiColor = GUI.color;
+            if(GUILayout.Button("Unsorted", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.defaultLayer ? 60 : 30)))
+                layerIndex = -1;
+            for (int i = 0; i < atlas.layers.Count; i++)
+            {
+                GUI.color = atlas.layers[i].color;
+                if(GUILayout.Button(("Layer " + i), GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30)))
+                    layerIndex = i;
+            }
+            GUI.color = guiColor;
+            if(GUILayout.Button("+", GUILayout.Width(18), GUILayout.Height(18)))
+            {
+                atlas.layers.Add(new TileAtlas.TagLayer());
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginVertical();
+            if(layerIndex < atlas.layers.Count)
+                activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
             paletteScroll = EditorGUILayout.BeginScrollView(paletteScroll);
             List<GUIContent> paletteIcons = new List<GUIContent>();
-            foreach (var atlasTile in t.tileSet.TileFromGuid.Values)
-            {
-                // Get a preview for the prefab
-                if (!atlasTile) continue;
-                Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
-                paletteIcons.Add(new GUIContent(texture));
-            }
+            if(activeLayer==atlas.defaultLayer)
+                foreach (var atlasTile in atlas.TileFromGuid.Values)
+                {
+                    // Get a preview for the prefab
+                    if (!atlasTile) continue;
+                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
+                    paletteIcons.Add(new GUIContent(texture));
+                }
+            else
+                foreach (var atlasTile in activeLayer.layerObjects)
+                {
+                    // Get a preview for the prefab
+                    if (!atlasTile) continue;
+                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
+                    paletteIcons.Add(new GUIContent(texture));
+                }
 
+            if (activeLayer != atlas.defaultLayer) paletteIcons.Add(new GUIContent("-"));
             // Display the grid
-            paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-20));
-            selectedTileGuid = t.tileSet.tiles[paletteIndex].guid;
+            paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
+            //if (activeLayer != atlas.defaultLayer && paletteIndex == paletteIcons.Count - 1)
+            //{
+            //    atlas.layers.Remove(activeLayer);
+            //    layerIndex--;
+            //    paletteIndex = 0;
+            //}
+            selectedTileGuid = atlas.tiles[paletteIndex].guid;
+            EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndHorizontal();
         }
 
         private void DrawTiles(SceneView view, Event e, int3 tilePosition)
