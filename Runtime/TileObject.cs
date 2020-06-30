@@ -42,6 +42,27 @@ namespace elZach.LevelEditor
             guid = System.Guid.NewGuid().ToString();
             UnityEditor.EditorUtility.SetDirty(this);
         }
+
+        [UnityEditor.MenuItem("Assets/Tiles/Create Tile From Prefab",true)]
+        static bool CreateFromPrefabValidate()
+        {
+            bool valid = UnityEditor.Selection.activeObject is GameObject;
+            return valid;
+        }
+        [UnityEditor.MenuItem("Assets/Tiles/Create Tile From Prefab")]
+        static void CreateFromPrefab()
+        {
+            GameObject prefab = UnityEditor.Selection.activeObject as GameObject;
+            string path = UnityEditor.AssetDatabase.GetAssetPath(prefab);
+            TileObject tile = CreateInstance<TileObject>();
+            tile.prefab = prefab;
+            var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
+            tile.behaviour = behaviour;
+            if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
+            UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+        }
+        
+
 #endif
     }
 }
