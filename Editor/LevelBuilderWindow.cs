@@ -25,11 +25,13 @@ namespace elZach.LevelEditor
                 if (!_t)
                 {
                     _t = FindObjectOfType<LevelBuilder>();
-                    if (!_t)
-                    {
-                        var go = new GameObject("Level Builder");
-                        _t = go.AddComponent<LevelBuilder>();
-                    }
+                    //if (!_t)
+                    //{
+                    //    var go = new GameObject("Level Builder");
+                    //    _t = go.AddComponent<LevelBuilder>();
+                    //    _t.tileSet = ScriptableObject.CreateInstance<TileAtlas>();
+                    //    _t.tileSet.tiles.Add(ScriptableObject.CreateInstance<TileObject>());
+                    //}
                 }
                 return _t;
             }
@@ -60,6 +62,7 @@ namespace elZach.LevelEditor
 
         private void OnGUI()
         {
+            if (!CheckForRequirements()) return;
             painting = GUILayout.Toggle(painting, "painting","Button");
             EditorGUILayout.LabelField(new GUIContent(layerIndex+":"+paletteIndex));
             //if (painting)
@@ -94,6 +97,7 @@ namespace elZach.LevelEditor
 
         private void OnSceneGUI(SceneView sceneView)
         {
+            if (!t || !t.tileSet || t.tileSet.tiles == null || t.tileSet.tiles.Count == 0 || t.tileSet.TileFromGuid == null || t.tileSet.TileFromGuid.Count == 0) return;
             var activeLayer = layerIndex == -1 ? t.tileSet.defaultLayer : t.tileSet.layers[layerIndex];
             if (painting) sceneView.Repaint(); // <- is this neccessary? 2020.2.0a15 seems to call repaint just every few OnScenGUI
             DrawRaster();
@@ -248,7 +252,7 @@ namespace elZach.LevelEditor
             for (int i = 0; i < atlas.layers.Count; i++)
             {
                 GUI.color = atlas.layers[i].color;
-                if(GUILayout.Button(("Layer " + i), GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30)))
+                if(GUILayout.Button(i.ToString(), GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30)))
                     layerIndex = i;
             }
             GUI.color = guiColor;
@@ -403,6 +407,43 @@ namespace elZach.LevelEditor
             GUIUtility.hotControl = 0;
             t.RemoveTile(tilePosition, layerIndex);
             e.Use();
+        }
+
+        bool CheckForRequirements()
+        {
+            if (!t)
+            {
+                EditorGUILayout.HelpBox("Please Create LevelBuilder in Scene", MessageType.Warning);
+                if (GUILayout.Button("Create LevelBuilder"))
+                {
+                    var go = new GameObject("Level Builder");
+                    _t = go.AddComponent<LevelBuilder>();
+                }
+                return false;
+            }
+            if (!t.tileSet)
+            {
+                EditorGUILayout.HelpBox("Please Apply TileAtlas to LevelBuilder", MessageType.Warning);
+                if (GUILayout.Button("Create New Tile Atlas"))
+                {
+                    var tileAtlas = CreateInstance<TileAtlas>();
+                    var path = EditorUtility.SaveFilePanelInProject("New TileAtlas", "My Tile Atlas", "asset", "Choose destination of new asset");
+                    AssetDatabase.CreateAsset(tileAtlas, path);
+                    AssetDatabase.Refresh();
+                    t.tileSet = (TileAtlas)AssetDatabase.LoadAssetAtPath(path, typeof(TileAtlas));
+                    EditorGUIUtility.PingObject(t.tileSet);
+                }
+                return false;
+            }
+            if (t.tileSet.tiles == null || t.tileSet.tiles.Count == 0)
+            {
+                EditorGUILayout.HelpBox("Please add Tiles to TileAtlas", MessageType.Warning);
+                if(GUILayout.Button("Ping Atlas"))
+                    EditorGUIUtility.PingObject(t.tileSet);
+                return false;
+            }
+            if (t.tileSet.TileFromGuid == null || t.tileSet.TileFromGuid.Keys.Count == 0) { EditorGUILayout.HelpBox("Please click 'Dictionary from List' in TileAtlas", MessageType.Warning); return false; }
+            return true;
         }
 
         void OnFocus()
