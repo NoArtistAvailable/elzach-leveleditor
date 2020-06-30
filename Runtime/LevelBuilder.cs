@@ -81,6 +81,10 @@ namespace elZach.LevelEditor
             var go = (GameObject)PrefabUtility.InstantiatePrefab(atlasTile.prefab) as GameObject;
             if (!go) { Debug.LogError("No GameObject found at Tile with guid " + guid); return; }
 
+            if (layerIndex >= layers.Count)
+                for (int i = 0; i <= layerIndex - layers.Count; i++)
+                    layers.Add(new SerializableDictionary<int3, PlacedTile>());
+
             for (int x = 0; x < atlasTile.size.x; x++)
                 for (int y = 0; y < atlasTile.size.y; y++)
                     for (int z = 0; z < atlasTile.size.z; z++)
@@ -157,10 +161,6 @@ namespace elZach.LevelEditor
                 placedTile.placedObject.SetActive(value);
         }
 
-        private void OnDrawGizmos()
-        {
-            
-        }
 #endif
 
     }

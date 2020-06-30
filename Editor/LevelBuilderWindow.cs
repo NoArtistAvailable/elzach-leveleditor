@@ -39,10 +39,21 @@ namespace elZach.LevelEditor
         TileObject selectedTile;
         Plane floorPlane;
         int3 tileMousePosition;
-        int activeLayer;
         int targetHeigth = 0;
         bool[] _layerVis;
-        bool[] layerVisibility { get { if (_layerVis == null) _layerVis = new bool[t.layers.Count]; return _layerVis; } }
+        bool[] layerVisibility { get
+            {
+                if (_layerVis == null) _layerVis = new bool[t.layers.Count];
+                if (t.layers.Count > _layerVis.Length)
+                {
+                    bool[] biggerBoolArray = new bool[t.layers.Count];
+                    for (int i = 0; i < _layerVis.Length; i++)
+                        biggerBoolArray[i] = _layerVis[i];
+                    _layerVis = biggerBoolArray;
+                }
+                return _layerVis;
+            }
+        }
 
         public enum RasterVisibility { None, WhenPainting, Always }
         public RasterVisibility rasterVisibility = RasterVisibility.WhenPainting;
@@ -50,10 +61,24 @@ namespace elZach.LevelEditor
         private void OnGUI()
         {
             painting = GUILayout.Toggle(painting, "painting","Button");
-            if (painting)
+            EditorGUILayout.LabelField(new GUIContent(layerIndex+":"+paletteIndex));
+            //if (painting)
             {
-                selectedTileGuid = t.tileSet.tiles[paletteIndex].guid;
-                selectedTile = t.tileSet.TileFromGuid[selectedTileGuid];
+                //if (layerIndex < -1 || layerIndex >= t.tileSet.layers.Count) return;
+                layerIndex = Mathf.Clamp(layerIndex, -1, t.tileSet.layers.Count - 1);
+                paletteIndex = Mathf.Clamp(paletteIndex, 0, layerIndex == -1 ? (t.tileSet.tiles.Count-1) : (t.tileSet.layers[layerIndex].layerObjects.Count-1));
+                paletteIndex = Mathf.Max(0, paletteIndex);
+                if (layerIndex == -1)
+                    selectedTileGuid = t.tileSet.tiles[paletteIndex].guid;
+                else if (t.tileSet.layers[layerIndex]?.layerObjects.Count>0)
+                    selectedTileGuid = t.tileSet.layers[layerIndex]?.layerObjects[paletteIndex]?.guid;
+                if(!string.IsNullOrEmpty(selectedTileGuid))
+                    selectedTile = t.tileSet.TileFromGuid[selectedTileGuid];
+                if(!selectedTile)
+                {
+                    selectedTile = t.tileSet.tiles[0];
+                    selectedTileGuid = selectedTile.guid;
+                }
             }
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel("Grid Visibility ");
@@ -61,7 +86,7 @@ namespace elZach.LevelEditor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             targetHeigth = EditorGUILayout.IntField("Heigth: ", targetHeigth);
-            activeLayer = EditorGUILayout.IntField("Layer:", activeLayer);
+            // activeLayer = EditorGUILayout.IntField("Layer:", activeLayer);
             EditorGUILayout.EndHorizontal();
             DrawPalette(t.tileSet, Event.current);
             if(GUILayout.Button("Clear Level"))t.ClearLevel(); 
@@ -114,10 +139,16 @@ namespace elZach.LevelEditor
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
+            Color guiColor = GUI.backgroundColor;
             for (int i = 0; i < t.layers.Count; i++)
             {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Toggle(i == activeLayer, ("Layer " + i), "Button", GUILayout.Width(100))) { activeLayer = i; }
+                GUI.backgroundColor = t.tileSet.layers[i].color + (i == layerIndex ? Color.gray : Color.clear);
+                if(GUILayout.Button((i+":"+t.tileSet.layers[i].name), "Button", GUILayout.Width(100)))
+                {
+                    layerIndex = i;
+                    Repaint();
+                }
                 bool vis = !layerVisibility[i];
                 vis = GUILayout.Toggle(vis, icon_eye, "Button", GUILayout.Width(30), GUILayout.Height(19));
                 if(vis != !layerVisibility[i])
@@ -128,6 +159,7 @@ namespace elZach.LevelEditor
                 GUILayout.Label(t.layers[i].Keys.Count.ToString(), "HelpBox", GUILayout.Height(19));
                 GUILayout.EndHorizontal();
             }
+            GUI.backgroundColor = guiColor;
             GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -168,34 +200,34 @@ namespace elZach.LevelEditor
         {
             TileAtlas.TagLayer activeLayer = layerIndex == -1 ? atlas.defaultLayer : (layerIndex < atlas.layers.Count) ? atlas.layers[layerIndex] : atlas.defaultLayer;
             //DragTest
-            Rect myRect = GUILayoutUtility.GetRect(100, 40, GUILayout.ExpandWidth(true));
-            GUI.Box(myRect, "Drag and Drop Prefabs to this Box!");
-            if (myRect.Contains(e.mousePosition))
-            {
-                if (e.type == EventType.DragUpdated)
-                {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Move;
-                    //Debug.Log("Drag Updated!");
-                    e.Use();
-                }
-                else if (e.type == EventType.DragPerform)
-                {
-                    DragAndDrop.AcceptDrag();
-                    Debug.Log("Drag Perform!");
-                    Debug.Log(DragAndDrop.objectReferences.Length);
-                    if(atlas.layers.Count>0)
-                        for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
-                        {
-                            atlas.layers[0].layerObjects.Add(DragAndDrop.objectReferences[i] as TileObject);
-                        }
-                    e.Use();
-                }
-            }
-            if (e.type == EventType.DragExited || e.type == EventType.MouseUp)
-            {
-                //Debug.Log("Drag exited");
-                DragAndDrop.PrepareStartDrag();
-            }
+            //Rect myRect = GUILayoutUtility.GetRect(100, 40, GUILayout.ExpandWidth(true));
+            //GUI.Box(myRect, "Drag and Drop Prefabs to this Box!");
+            //if (myRect.Contains(e.mousePosition))
+            //{
+            //    if (e.type == EventType.DragUpdated)
+            //    {
+            //        DragAndDrop.visualMode = DragAndDropVisualMode.Move;
+            //        //Debug.Log("Drag Updated!");
+            //        e.Use();
+            //    }
+            //    else if (e.type == EventType.DragPerform)
+            //    {
+            //        DragAndDrop.AcceptDrag();
+            //        Debug.Log("Drag Perform!");
+            //        Debug.Log(DragAndDrop.objectReferences.Length);
+            //        if (atlas.layers.Count > 0)
+            //            for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+            //            {
+            //                atlas.layers[0].layerObjects.Add(DragAndDrop.objectReferences[i] as TileObject);
+            //            }
+            //        e.Use();
+            //    }
+            //}
+            //if (e.type == EventType.DragExited || e.type == EventType.MouseUp)
+            //{
+            //    //Debug.Log("Drag exited");
+            //    DragAndDrop.PrepareStartDrag();
+            //}
             //------
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical();
@@ -211,16 +243,29 @@ namespace elZach.LevelEditor
             GUI.color = guiColor;
             if(GUILayout.Button("+", GUILayout.Width(18), GUILayout.Height(18)))
             {
-                atlas.layers.Add(new TileAtlas.TagLayer());
+                atlas.AddTagLayer();
             }
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.BeginVertical();
-            if(layerIndex < atlas.layers.Count)
+            if (activeLayer != atlas.defaultLayer)
+            {
+                bool changedBefore = GUI.changed;
+                activeLayer.name = EditorGUILayout.TextField(activeLayer.name);
+                if (!changedBefore && GUI.changed) UnityEditor.EditorUtility.SetDirty(atlas);
+            }
+            else
+                EditorGUILayout.LabelField(activeLayer.name);
+
+            if (layerIndex < atlas.layers.Count)
                 activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
+
+            if (activeLayer!= atlas.defaultLayer && activeLayer.layerObjects.Count == 0) { EditorGUILayout.LabelField("Drag and Drop Tiles here."); return; }
+
+            //-----
             paletteScroll = EditorGUILayout.BeginScrollView(paletteScroll);
             List<GUIContent> paletteIcons = new List<GUIContent>();
-            if(activeLayer==atlas.defaultLayer)
+            if (activeLayer==atlas.defaultLayer)
                 foreach (var atlasTile in atlas.TileFromGuid.Values)
                 {
                     // Get a preview for the prefab
@@ -247,45 +292,61 @@ namespace elZach.LevelEditor
             for(int i=0; i < paletteIcons.Count; i++)
             {
                 Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width((position.width - 60) / columnCount));
-                //if (GUILayout.Button(paletteIcons[i], GUILayout.Width((position.width - 60) / columnCount))){
+                TileObject buttonTileObject = activeLayer == atlas.defaultLayer ? atlas.tiles[i] : i < activeLayer.layerObjects.Count ? activeLayer.layerObjects[i] : null;
                 bool clickHere = false;
                 if (buttonRect.Contains(e.mousePosition))
                 {
                     switch (e.type)
                     {
-                        case EventType.MouseDrag:
-                            DragAndDrop.PrepareStartDrag();
+                        //case EventType.MouseDrag:
+                        //    DragAndDrop.PrepareStartDrag();
 
-                            DragAndDrop.SetGenericData("TileObject", atlas.tiles[i]);
-                            DragAndDrop.objectReferences = new Object[] { atlas.tiles[i] };
-                            DragAndDrop.StartDrag("Drag");
-                            break;
-                        case EventType.DragExited:
-                            clickHere = true;
-                            break;
+                        //    DragAndDrop.SetGenericData("TileObject", buttonTileObject);
+                        //    DragAndDrop.objectReferences = new Object[] { buttonTileObject };
+                        //    DragAndDrop.StartDrag("Drag");
+                        //    break;
+                        //case EventType.DragExited:
+                        //    clickHere = true;
+                        //    break;
                         case EventType.MouseDown:
                             clickHere = true;
                             break;
                     }
                 }
                 GUI.Toggle(buttonRect, paletteIndex == i, paletteIcons[i], "Button");
-                if ( clickHere) {
+                if (clickHere)
+                {
+                    paletteIndex = i;
+                    if (e.button == 1 || activeLayer == atlas.defaultLayer) // rightclick
+                    {
+                        GenericMenu menu = new GenericMenu();
 
-                    if (e.button == 1) // rightclick
-                    {
-                        //EditorUtility.DisplayPopupMenu(position,)
-                        Debug.Log("Right Click!");
-                    }
-                    else
-                    {
-                        paletteIndex = i;
-                        if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
+                        menu.AddDisabledItem(new GUIContent("Move to Layer"));
+                        for (int i2 = 0; i2 < atlas.layers.Count; i2++)
                         {
-                            atlas.layers.Remove(activeLayer);
-                            paletteIndex = 0;
-                            layerIndex--;
+                            int weird = i2;
+                            menu.AddItem(new GUIContent("Layer " + weird), false, () =>
+                             {
+                                 Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
+                                 atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird]);
+                             });
                         }
+                        menu.AddItem(new GUIContent("Add New Layer"), false,()=> 
+                        {
+                            atlas.AddTagLayer();
+                            atlas.MoveTileToLayer(buttonTileObject, atlas.layers[atlas.layers.Count - 1]);
+                        });
+                        menu.ShowAsContext();
+
+                        e.Use();
                     }
+                    else if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
+                    {
+                        atlas.layers.Remove(activeLayer);
+                        paletteIndex = 0;
+                        layerIndex--;
+                    }
+
                 }
                 if (i % (int)(columnCount-1) == 0 && i != 0)
                 {
@@ -294,23 +355,34 @@ namespace elZach.LevelEditor
                 }
             }
             EditorGUILayout.EndHorizontal();
-            selectedTileGuid = atlas.tiles[paletteIndex].guid;
+            if(activeLayer==atlas.defaultLayer)
+                selectedTileGuid = atlas.tiles[paletteIndex].guid;
+            else
+                selectedTileGuid = activeLayer.layerObjects[paletteIndex].guid;
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndHorizontal();
         }
 
+        public void ChangeTileToLayer(TileAtlas atlas, int i2, TileObject buttonTileObject)
+        {
+            Debug.Log(i2 + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
+            atlas.layers[i2].layerObjects.Add(buttonTileObject);
+        }
+
         private void DrawTiles(SceneView view, Event e, int3 tilePosition)
         {
+            if (layerIndex == -1) return;
             GUIUtility.hotControl = 0;
-            t.PlaceTile(selectedTileGuid, tilePosition, activeLayer);
+            t.PlaceTile(selectedTileGuid, tilePosition, layerIndex);
             e.Use();
         }
 
         void EraseTiles(SceneView view, Event e, int3 tilePosition)
         {
+            if (layerIndex == -1) return;
             GUIUtility.hotControl = 0;
-            t.RemoveTile(tilePosition, activeLayer);
+            t.RemoveTile(tilePosition, layerIndex);
             e.Use();
         }
 

@@ -20,7 +20,8 @@ namespace elZach.LevelEditor
 
             public TagLayer()
             {
-                color = UnityEngine.Random.ColorHSV(0f, 1f, 0.5f, 0.5f, 0.6f, 0.8f);
+                name = "Layer";
+                color = Color.white;//UnityEngine.Random.ColorHSV(0f, 1f, 0.5f, 0.5f, 0.6f, 0.8f);
             }
             public TagLayer(string name, Color color, Vector3 size)
             {
@@ -37,6 +38,12 @@ namespace elZach.LevelEditor
         public TagLayer defaultLayer = new TagLayer("Default", Color.gray, Vector3.one);
         public List<TagLayer> layers = new List<TagLayer>();
         
+        public TagLayer AddTagLayer()
+        {
+            var newLayer = new TagLayer("Layer", UnityEngine.Random.ColorHSV(0f, 1f, 0.5f, 0.5f, 0.6f, 0.8f), Vector3.one);
+            layers.Add(newLayer);
+            return newLayer;
+        }
 
 #if UNITY_EDITOR
         [Button("Dictionary From List")]
@@ -54,6 +61,20 @@ namespace elZach.LevelEditor
         public TileObject GetTile(int index)
         {
             return tiles[index];
+        }
+
+        public void MoveTileToLayer(TileObject tile, TagLayer layer, bool allowMultiLayer = false)
+        {
+            if (!tiles.Contains(tile)) { Debug.LogWarning("Atlas doesnt contain tile "+tile.name, this); return; }
+            if (layer.layerObjects.Contains(tile)) { Debug.Log("Layer already contains tile "+tile.name, this); return; }
+
+            if (!allowMultiLayer)
+                foreach(var lay in layers)
+                    if (lay != layer)
+                        if(lay.layerObjects.Contains(tile))
+                            lay.layerObjects.Remove(tile);
+
+            layer.layerObjects.Add(tile);
         }
 
     }
