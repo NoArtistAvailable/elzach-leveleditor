@@ -31,4 +31,12 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 148b0beec6a6c624b9be8202e68b76ac, type: 2}
     - {fileID: 11400000, guid: 5140e034d431ac246ad9d7ed7fb581b0, type: 2}
     - {fileID: 11400000, guid: e591a44929f7936488bc6f12cc4be860, type: 2}
+  defaultLayer:
+    name: Default
+    color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    rasterSize:
+      x: 1
+      y: 1
+      z: 1
+    layerObjects: []
   layers: []

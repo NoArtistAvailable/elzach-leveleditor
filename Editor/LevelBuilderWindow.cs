@@ -36,6 +36,7 @@ namespace elZach.LevelEditor
         }
         static LevelBuilder _t;
         bool painting = true;
+        TileObject selectedTile;
         Plane floorPlane;
         int3 tileMousePosition;
         int activeLayer;
@@ -44,11 +45,16 @@ namespace elZach.LevelEditor
         bool[] layerVisibility { get { if (_layerVis == null) _layerVis = new bool[t.layers.Count]; return _layerVis; } }
 
         public enum RasterVisibility { None, WhenPainting, Always }
-        public RasterVisibility rasterVisibility = RasterVisibility.Always;
+        public RasterVisibility rasterVisibility = RasterVisibility.WhenPainting;
 
         private void OnGUI()
         {
             painting = GUILayout.Toggle(painting, "painting","Button");
+            if (painting)
+            {
+                selectedTileGuid = t.tileSet.tiles[paletteIndex].guid;
+                selectedTile = t.tileSet.TileFromGuid[selectedTileGuid];
+            }
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel("Grid Visibility ");
             rasterVisibility = (RasterVisibility) EditorGUILayout.EnumPopup(rasterVisibility);
@@ -66,7 +72,7 @@ namespace elZach.LevelEditor
             if(painting) sceneView.Repaint(); // <- is this neccessary? 2020.2.0a15 seems to call repaint just every few OnScenGUI
             DrawRaster();
             OnScreenUI(sceneView);
-            floorPlane = new Plane(Vector3.up, t.transform.position + Vector3.up *t.rasterSize.y*targetHeigth);
+            floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up *t.rasterSize.y*targetHeigth);
             var e = Event.current;
             if (painting)
             {
@@ -81,7 +87,10 @@ namespace elZach.LevelEditor
                     if (t.TilePositionInFloorSize(newTileMousePosition))
                         tileMousePosition = newTileMousePosition;
                 }
-                Handles.DrawWireDisc(new Vector3(tileMousePosition.x + 0.5f, tileMousePosition.y, tileMousePosition.z + 0.5f), Vector3.up, 0.2f);
+                //Handles.DrawWireDisc(t.TilePositionToLocalPosition(tileMousePosition, selectedTile.size), Vector3.up, 0.5f * selectedTile.size.x);
+                Handles.color = Color.white;
+                int3 brushSize = selectedTile ? selectedTile.size : new int3(1, 1, 1);
+                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize) + Vector3.up * brushSize.y * 0.5f, new Vector3(brushSize.x, brushSize.y, brushSize.z));
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                     DrawTiles(sceneView, e, tileMousePosition);
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
@@ -109,11 +118,11 @@ namespace elZach.LevelEditor
             {
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Toggle(i == activeLayer, ("Layer " + i), "Button", GUILayout.Width(100))) { activeLayer = i; }
-                bool vis = layerVisibility[i];
+                bool vis = !layerVisibility[i];
                 vis = GUILayout.Toggle(vis, icon_eye, "Button", GUILayout.Width(30), GUILayout.Height(19));
-                if(vis != layerVisibility[i])
+                if(vis != !layerVisibility[i])
                 {
-                    layerVisibility[i] = vis;
+                    layerVisibility[i] = !vis;
                     t.ToggleLayerActive(vis, i);
                 }
                 GUILayout.Label(t.layers[i].Keys.Count.ToString(), "HelpBox", GUILayout.Height(19));
@@ -130,7 +139,7 @@ namespace elZach.LevelEditor
             if (rasterVisibility == RasterVisibility.Always || (rasterVisibility == RasterVisibility.WhenPainting && painting))
             {
                 Handles.matrix = t.transform.localToWorldMatrix;
-                Handles.color = new Color(0f, 0.5f, 0.8f);
+                Handles.color = new Color(0f, 0.5f, 0.8f, 0.15f);
                 float zOffset = t.rasterSize.z * t.floorSize.z * 0.5f;
                 for (int x = -Mathf.FloorToInt(t.floorSize.x / 2); x < Mathf.CeilToInt(t.floorSize.x / 2); x++)
                 {
@@ -202,13 +211,35 @@ namespace elZach.LevelEditor
 
             if (activeLayer != atlas.defaultLayer) paletteIcons.Add(new GUIContent("-"));
             // Display the grid
-            paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
-            //if (activeLayer != atlas.defaultLayer && paletteIndex == paletteIcons.Count - 1)
-            //{
-            //    atlas.layers.Remove(activeLayer);
-            //    layerIndex--;
-            //    paletteIndex = 0;
-            //}
+
+            //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
+            float columnCount = 4f;
+            EditorGUILayout.BeginHorizontal();
+            for(int i=0; i < paletteIcons.Count; i++)
+            {
+                if(GUILayout.Button(paletteIcons[i], GUILayout.Width((position.width - 40) / columnCount))){
+                    if (Event.current.button == 1) // rightclick
+                    {
+                        //EditorUtility.DisplayPopupMenu(position,)
+                    }
+                    else
+                    {
+                        paletteIndex = i;
+                        if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
+                        {
+                            atlas.layers.Remove(activeLayer);
+                            paletteIndex = 0;
+                            layerIndex--;
+                        }
+                    }
+                }
+                if (i % (int)(columnCount-1) == 0 && i != 0)
+                {
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.BeginHorizontal();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
             selectedTileGuid = atlas.tiles[paletteIndex].guid;
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
@@ -218,15 +249,6 @@ namespace elZach.LevelEditor
         private void DrawTiles(SceneView view, Event e, int3 tilePosition)
         {
             GUIUtility.hotControl = 0;
-            
-            //Vector2 mousePos = e.mousePosition;
-            //mousePos.y = view.camera.pixelHeight - mousePos.y;
-            //Ray ray = view.camera.ScreenPointToRay(mousePos);
-            //float d;
-            //floorPlane.Raycast(ray, out d);
-            //var worldPos = ray.GetPoint(d);
-            //var tilePos = t.WorldPositionToTilePosition(worldPos);
-            //Debug.Log("WorldPos: " + worldPos + " : TilePos " + tilePos);
             t.PlaceTile(selectedTileGuid, tilePosition, activeLayer);
             e.Use();
         }
@@ -234,15 +256,6 @@ namespace elZach.LevelEditor
         void EraseTiles(SceneView view, Event e, int3 tilePosition)
         {
             GUIUtility.hotControl = 0;
-            //EditorGUIUtility.AddCursorRect(view.position, MouseCursor.ArrowMinus);
-            //Vector2 mousePos = e.mousePosition;
-            //mousePos.y = view.camera.pixelHeight - mousePos.y;
-            //Ray ray = view.camera.ScreenPointToRay(mousePos);
-            //float d;
-            //floorPlane.Raycast(ray, out d);
-            //var worldPos = ray.GetPoint(d);
-            //var tilePos = t.WorldPositionToTilePosition(worldPos);
-            //Debug.Log("WorldPos: " + worldPos + " : TilePos " + tilePos);
             t.RemoveTile(tilePosition, activeLayer);
             e.Use();
         }
