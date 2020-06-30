@@ -63,7 +63,7 @@ namespace elZach.LevelEditor
             targetHeigth = EditorGUILayout.IntField("Heigth: ", targetHeigth);
             activeLayer = EditorGUILayout.IntField("Layer:", activeLayer);
             EditorGUILayout.EndHorizontal();
-            DrawPalette(t.tileSet);
+            DrawPalette(t.tileSet, Event.current);
             if(GUILayout.Button("Clear Level"))t.ClearLevel(); 
         }
 
@@ -164,12 +164,40 @@ namespace elZach.LevelEditor
         int paletteIndex;
         int layerIndex = -1;
         Vector2 paletteScroll;
-        void DrawPalette(TileAtlas atlas)
+        void DrawPalette(TileAtlas atlas, Event e)
         {
             TileAtlas.TagLayer activeLayer = layerIndex == -1 ? atlas.defaultLayer : (layerIndex < atlas.layers.Count) ? atlas.layers[layerIndex] : atlas.defaultLayer;
-
+            //DragTest
+            Rect myRect = GUILayoutUtility.GetRect(100, 40, GUILayout.ExpandWidth(true));
+            GUI.Box(myRect, "Drag and Drop Prefabs to this Box!");
+            if (myRect.Contains(e.mousePosition))
+            {
+                if (e.type == EventType.DragUpdated)
+                {
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Move;
+                    //Debug.Log("Drag Updated!");
+                    e.Use();
+                }
+                else if (e.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    Debug.Log("Drag Perform!");
+                    Debug.Log(DragAndDrop.objectReferences.Length);
+                    if(atlas.layers.Count>0)
+                        for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                        {
+                            atlas.layers[0].layerObjects.Add(DragAndDrop.objectReferences[i] as TileObject);
+                        }
+                    e.Use();
+                }
+            }
+            if (e.type == EventType.DragExited || e.type == EventType.MouseUp)
+            {
+                //Debug.Log("Drag exited");
+                DragAndDrop.PrepareStartDrag();
+            }
+            //------
             EditorGUILayout.BeginHorizontal();
-
             EditorGUILayout.BeginVertical();
             Color guiColor = GUI.color;
             if(GUILayout.Button("Unsorted", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.defaultLayer ? 60 : 30)))
@@ -215,12 +243,38 @@ namespace elZach.LevelEditor
             //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
             float columnCount = 4f;
             EditorGUILayout.BeginHorizontal();
+            
             for(int i=0; i < paletteIcons.Count; i++)
             {
-                if(GUILayout.Button(paletteIcons[i], GUILayout.Width((position.width - 40) / columnCount))){
-                    if (Event.current.button == 1) // rightclick
+                Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width((position.width - 60) / columnCount));
+                //if (GUILayout.Button(paletteIcons[i], GUILayout.Width((position.width - 60) / columnCount))){
+                bool clickHere = false;
+                if (buttonRect.Contains(e.mousePosition))
+                {
+                    switch (e.type)
+                    {
+                        case EventType.MouseDrag:
+                            DragAndDrop.PrepareStartDrag();
+
+                            DragAndDrop.SetGenericData("TileObject", atlas.tiles[i]);
+                            DragAndDrop.objectReferences = new Object[] { atlas.tiles[i] };
+                            DragAndDrop.StartDrag("Drag");
+                            break;
+                        case EventType.DragExited:
+                            clickHere = true;
+                            break;
+                        case EventType.MouseDown:
+                            clickHere = true;
+                            break;
+                    }
+                }
+                GUI.Toggle(buttonRect, paletteIndex == i, paletteIcons[i], "Button");
+                if ( clickHere) {
+
+                    if (e.button == 1) // rightclick
                     {
                         //EditorUtility.DisplayPopupMenu(position,)
+                        Debug.Log("Right Click!");
                     }
                     else
                     {
