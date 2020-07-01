@@ -453,6 +453,10 @@ namespace elZach.LevelEditor
                 paletteIndex = 0;
                 layerIndex--;
             });
+            menu.AddItem(new GUIContent("Delete all objects at " + index + ":" + atlas.layers[index].name), false, () => 
+            {
+                t.ClearLayer(index);
+            });
             menu.ShowAsContext();
             e.Use();
         }

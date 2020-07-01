@@ -29,11 +29,7 @@ namespace elZach.LevelEditor
 
         [Reorderable]
         public Variant[] variants;
-
-        public TileObject()
-        {
-            guid = System.Guid.NewGuid().ToString();
-        }
+        
 
 #if UNITY_EDITOR
         [Button("Get new guid")]
