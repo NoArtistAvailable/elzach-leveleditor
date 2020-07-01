@@ -182,6 +182,16 @@ namespace elZach.LevelEditor
                 placedTile.placedObject.SetActive(value);
         }
 
+        public void UpdateTilePositionsOnLayer(TileAtlas.TagLayer layer, int index)
+        {
+            if (index == -1) return; // there should be no tiles on defaultlayer
+            Debug.Log("[LevelBuilder] Update Position called on layer " + layer.name + " and index " + index);
+            foreach(var placed in layers[index].Values)
+            {
+                placed.placedObject.transform.localPosition = TilePositionToLocalPosition(placed.position, layer);
+            }
+        }
+
 #endif
 
     }

@@ -294,12 +294,14 @@ namespace elZach.LevelEditor
             if (layerIndex < atlas.layers.Count)
             {
                 //activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
+                bool changedBefore = GUI.changed;
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Rastersize");
-                activeLayer.rasterSize.x = EditorGUILayout.FloatField(activeLayer.rasterSize.x);
-                activeLayer.rasterSize.y = EditorGUILayout.FloatField(activeLayer.rasterSize.y);
-                activeLayer.rasterSize.z = EditorGUILayout.FloatField(activeLayer.rasterSize.z);
+                activeLayer.rasterSize.x = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.x);
+                activeLayer.rasterSize.y = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.y);
+                activeLayer.rasterSize.z = EditorGUILayout.DelayedFloatField(activeLayer.rasterSize.z);
                 EditorGUILayout.EndHorizontal();
+                if (!changedBefore && GUI.changed) t.UpdateTilePositionsOnLayer(activeLayer, layerIndex);
             }
 
             if (activeLayer!= atlas.defaultLayer && activeLayer.layerObjects.Count == 0) { EditorGUILayout.LabelField("Drag and Drop Tiles here."); return; }
