@@ -137,6 +137,7 @@ namespace elZach.LevelEditor
             if (!painting) return;
             Handles.BeginGUI();
             var icon_eye = EditorGUIUtility.IconContent("VisibilityOn");
+
             GUILayout.BeginHorizontal();
 
             GUILayout.BeginVertical();
@@ -173,6 +174,10 @@ namespace elZach.LevelEditor
             GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
+            DrawOnScreenPalette();
+            GUILayout.Space(22);
+
             Handles.EndGUI();
         }
 
@@ -406,6 +411,28 @@ namespace elZach.LevelEditor
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndHorizontal();
+        }
+
+        Vector2 onScreenPaletteScroll;
+        void DrawOnScreenPalette()
+        {
+            bool guiChangedBefore = GUI.changed;
+            TileAtlas.TagLayer activeLayer = layerIndex == -1 ? t.tileSet.defaultLayer : (layerIndex < t.tileSet.layers.Count) ? t.tileSet.layers[layerIndex] : t.tileSet.defaultLayer;
+            if (activeLayer == t.tileSet.defaultLayer) return;
+
+            onScreenPaletteScroll = EditorGUILayout.BeginScrollView(onScreenPaletteScroll);
+            List<GUIContent> paletteIcons = new List<GUIContent>();
+
+            foreach (var atlasTile in activeLayer.layerObjects)
+            {
+                // Get a preview for the prefab
+                if (!atlasTile) continue;
+                Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
+                paletteIcons.Add(new GUIContent(texture));
+            }
+            paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 1, "Button", GUILayout.Width(40), GUILayout.Height(paletteIcons.Count*40));
+            EditorGUILayout.EndScrollView();
+            if (!guiChangedBefore && GUI.changed) Repaint();
         }
 
         public void ChangeTileToLayer(TileAtlas atlas, int i2, TileObject buttonTileObject)
