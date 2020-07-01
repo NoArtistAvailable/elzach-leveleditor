@@ -252,8 +252,25 @@ namespace elZach.LevelEditor
             for (int i = 0; i < atlas.layers.Count; i++)
             {
                 GUI.color = atlas.layers[i].color;
-                if(GUILayout.Button(i.ToString(), GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30)))
-                    layerIndex = i;
+                Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(i.ToString()), "Button", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30));
+                if (GUI.Button(buttonRect, i.ToString()))
+                {
+                    
+                    int index = i;
+                    if(e.button == 1)
+                    {
+                        GenericMenu menu = new GenericMenu();
+                        menu.AddItem(new GUIContent("Remove Layer " + index + ":" + atlas.layers[index].name), false, () => 
+                        {
+                            atlas.RemoveLayer(atlas.layers[index]);
+                        });
+                        menu.ShowAsContext();
+                        e.Use();
+                        layerIndex = -1;
+                    }
+                    else
+                        layerIndex = i;
+                }
             }
             GUI.color = guiColor;
             if(GUILayout.Button("+", GUILayout.Width(18), GUILayout.Height(18)))
@@ -365,7 +382,7 @@ namespace elZach.LevelEditor
                     }
                     else if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
                     {
-                        atlas.layers.Remove(activeLayer);
+                        atlas.RemoveLayer(activeLayer);
                         paletteIndex = 0;
                         layerIndex--;
                     }
@@ -433,6 +450,9 @@ namespace elZach.LevelEditor
                     t.tileSet = (TileAtlas)AssetDatabase.LoadAssetAtPath(path, typeof(TileAtlas));
                     EditorGUIUtility.PingObject(t.tileSet);
                 }
+                TileAtlas chosen = null;
+                chosen = (TileAtlas)EditorGUILayout.ObjectField("Use Preexisting ",chosen, typeof(TileAtlas), false);
+                if (chosen) t.tileSet = chosen;
                 return false;
             }
             if (t.tileSet.tiles == null || t.tileSet.tiles.Count == 0)

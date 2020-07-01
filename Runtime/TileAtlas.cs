@@ -32,7 +32,7 @@ namespace elZach.LevelEditor
 
         }
 
-
+        [Reorderable]
         public List<TileObject> tiles;
         public SerializableDictionary<string, TileObject> TileFromGuid = new SerializableDictionary<string, TileObject>();
         public TagLayer defaultLayer = new TagLayer("Default", Color.gray, Vector3.one);
@@ -75,6 +75,11 @@ namespace elZach.LevelEditor
                             lay.layerObjects.Remove(tile);
 
             layer.layerObjects.Add(tile);
+        }
+
+        public void RemoveLayer(TagLayer layer)
+        {
+            layers.Remove(layer);
         }
 
     }
