@@ -93,7 +93,36 @@ namespace elZach.LevelEditor
             targetHeigth = EditorGUILayout.IntField("Heigth: ", targetHeigth);
             // activeLayer = EditorGUILayout.IntField("Layer:", activeLayer);
             EditorGUILayout.EndHorizontal();
+            Event e = Event.current;
+            if (e.type == EventType.DragUpdated)
+            {
+                Rect myRect = GUILayoutUtility.GetRect(100, 40, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                GUI.Box(myRect, "Drag and Drop Prefabs to this Box!");
+                if (myRect.Contains(e.mousePosition))
+                {
+                    if (e.type == EventType.DragUpdated)
+                    {
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Move;
+                        //Debug.Log("Drag Updated!");
+                        e.Use();
+                    }
+                    else if (e.type == EventType.DragPerform)
+                    {
+                        DragAndDrop.AcceptDrag();
+                        Debug.Log("Drag Perform!");
+                        Debug.Log(DragAndDrop.objectReferences.Length);
+                        for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                        {
+                            t.tileSet.tiles.Add(DragAndDrop.objectReferences[i] as TileObject);
+                            t.tileSet.GetDictionaryFromList();
+                        }
+                        e.Use();
+                    }
+                }
+            }
+
             DrawPalette(t.tileSet, Event.current);
+            if (GUILayout.Button("Select Atlas")) Selection.activeObject = t.tileSet;
             if(GUILayout.Button("Clear Level"))t.ClearLevel(); 
         }
 
@@ -411,6 +440,10 @@ namespace elZach.LevelEditor
         {
             GenericMenu menu = new GenericMenu();
 
+            menu.AddItem(new GUIContent("Select Tile Object"), false, () => 
+            {
+                Selection.activeObject = buttonTileObject;
+            });
             for (int i = 0; i < atlas.layers.Count; i++)
             {
                 if (i == layerIndex) continue;
