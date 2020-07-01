@@ -151,7 +151,7 @@ namespace elZach.LevelEditor
 
             GUILayout.BeginVertical();
             Color guiColor = GUI.backgroundColor;
-            for (int i = 0; i < t.layers.Count; i++)
+            for (int i = 0; i < Mathf.Min(t.layers.Count,t.tileSet.layers.Count); i++)
             {
                 GUILayout.BeginHorizontal();
                 GUI.backgroundColor = t.tileSet.layers[i].color + (i == layerIndex ? Color.gray : Color.clear);
@@ -258,23 +258,15 @@ namespace elZach.LevelEditor
                 layerIndex = -1;
             for (int i = 0; i < atlas.layers.Count; i++)
             {
+                int index = i;
                 GUI.color = atlas.layers[i].color;
                 Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(i.ToString()), "Button", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30));
                 if (GUI.Button(buttonRect, i.ToString()))
                 {
                     layerIndex = i;
-                    int index = i;
                     if(e.button == 1)
                     {
-                        GenericMenu menu = new GenericMenu();
-                        menu.AddItem(new GUIContent("Remove Layer " + index + ":" + atlas.layers[index].name), false, () => 
-                        {
-                            atlas.RemoveLayer(atlas.layers[index]);
-                            paletteIndex = 0;
-                            layerIndex--;
-                        });
-                        menu.ShowAsContext();
-                        e.Use();
+                        LayerRightClickMenu(e, index, atlas);
                     }
                         
                 }
@@ -331,7 +323,7 @@ namespace elZach.LevelEditor
                     paletteIcons.Add(new GUIContent(texture));
                 }
 
-            if (activeLayer != atlas.defaultLayer) paletteIcons.Add(new GUIContent("-"));
+            if (activeLayer != atlas.defaultLayer) paletteIcons.Add(EditorGUIUtility.IconContent("Toolbar Plus"));
             // Display the grid
 
             //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
@@ -366,34 +358,14 @@ namespace elZach.LevelEditor
                 if (clickHere)
                 {
                     paletteIndex = i;
-                    if (e.button == 1 || activeLayer == atlas.defaultLayer) // rightclick
+                    if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
                     {
-                        GenericMenu menu = new GenericMenu();
-
-                        menu.AddDisabledItem(new GUIContent("Move to Layer"));
-                        for (int i2 = 0; i2 < atlas.layers.Count; i2++)
-                        {
-                            int weird = i2;
-                            menu.AddItem(new GUIContent("Layer " + weird), false, () =>
-                             {
-                                 Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
-                                 atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird]);
-                             });
-                        }
-                        menu.AddItem(new GUIContent("Add New Layer"), false,()=> 
-                        {
-                            atlas.AddTagLayer();
-                            atlas.MoveTileToLayer(buttonTileObject, atlas.layers[atlas.layers.Count - 1]);
-                        });
-                        menu.ShowAsContext();
-
-                        e.Use();
-                    }
-                    else if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
-                    {
-                        atlas.RemoveLayer(activeLayer);
+                        Debug.Log("Add Tile to layer Menu");
                         paletteIndex = 0;
-                        layerIndex--;
+                    }
+                    else if (e.button == 1 || activeLayer == atlas.defaultLayer) // rightclick
+                    {
+                        TileRightClickMenu(e, buttonTileObject, atlas);
                     }
 
                 }
@@ -433,6 +405,56 @@ namespace elZach.LevelEditor
             paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 1, "Button", GUILayout.Width(40), GUILayout.Height(paletteIcons.Count*40));
             EditorGUILayout.EndScrollView();
             if (!guiChangedBefore && GUI.changed) Repaint();
+        }
+
+        void TileRightClickMenu(Event e, TileObject buttonTileObject, TileAtlas atlas)
+        {
+            GenericMenu menu = new GenericMenu();
+
+            for (int i = 0; i < atlas.layers.Count; i++)
+            {
+                if (i == layerIndex) continue;
+                int weird = i;
+                menu.AddItem(new GUIContent("Move to Layer " + weird), false, () =>
+                {
+                    Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
+                    atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird]);
+                    t.MoveExistingTilesToLayer(buttonTileObject, layerIndex ,weird);
+                });
+            }
+            menu.AddItem(new GUIContent("Move to and create new Layer"), false, () =>
+            {
+                atlas.AddTagLayer();
+                atlas.MoveTileToLayer(buttonTileObject, atlas.layers[atlas.layers.Count - 1]);
+            });
+            menu.AddSeparator("");
+            for (int i = 0; i < atlas.layers.Count; i++)
+            {
+                if (i == layerIndex) continue;
+                int weird = i;
+                menu.AddItem(new GUIContent("Add to Layer " + weird), false, () =>
+                {
+                    Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
+                    atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird], true);
+                });
+            }
+            menu.ShowAsContext();
+
+            e.Use();
+        }
+
+        void LayerRightClickMenu(Event e, int index, TileAtlas atlas)
+        {
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Remove Layer " + index + ":" + atlas.layers[index].name), false, () =>
+            {
+                atlas.RemoveLayer(atlas.layers[index]);
+                t.RemoveLayer(index);
+                paletteIndex = 0;
+                layerIndex--;
+            });
+            menu.ShowAsContext();
+            e.Use();
         }
 
         public void ChangeTileToLayer(TileAtlas atlas, int i2, TileObject buttonTileObject)

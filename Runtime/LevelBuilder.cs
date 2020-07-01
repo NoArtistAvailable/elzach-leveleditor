@@ -2,6 +2,7 @@
 using UnityEngine;
 using Unity.Mathematics;
 using elZach.common;
+using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -176,6 +177,14 @@ namespace elZach.LevelEditor
             layer.Clear();
         }
 
+        public void RemoveLayer(int index)
+        {
+            if (layers.Count <= index) return;
+            Debug.Log("Removing Layer [" + index + "] of "+layers.Count);
+            ClearLayer(index);
+            layers.RemoveAt(index);
+        }
+
         public void ToggleLayerActive(bool value, int index)
         {
             foreach (var placedTile in layers[index].Values)
@@ -190,6 +199,47 @@ namespace elZach.LevelEditor
             {
                 placed.placedObject.transform.localPosition = TilePositionToLocalPosition(placed.position, layer);
             }
+        }
+
+        public void MoveExistingTilesToLayer(TileObject tile, int fromIndex, int toIndex)
+        {
+            Debug.Log("Moving all tiles " + tile.name + " from " + fromIndex + " to index.");
+            if (fromIndex >= layers.Count) return;
+            if (toIndex >= layers.Count)
+                for (int i = 0; i <= toIndex - layers.Count; i++)
+                    layers.Add(new SerializableDictionary<int3, PlacedTile>());
+
+            for (int i = 0; i < layers.Count; i++)
+            {
+                if (i == toIndex) continue;
+                if (layers[i].Any(x => x.Value.tileObject == tile))
+                    MoveTilesFromLayerToLayer(tile, i, toIndex);
+            }
+        }
+
+        private void MoveTilesFromLayerToLayer(TileObject tile, int fromIndex, int toIndex)
+        {
+            List<int3> keysToRemove = new List<int3>();
+            foreach (var kvp in layers[fromIndex])
+            {
+                if (kvp.Value.tileObject == tile)
+                {
+                    if (!layers[toIndex].ContainsKey(kvp.Key))
+                    {
+                        //Debug.Log("Adding " + kvp.Key + " to layer " + toIndex);
+                        layers[toIndex].Add(kvp.Key, kvp.Value);
+                    }
+                    else
+                    {
+                        //Debug.Log(kvp.Key + " already set in " + toIndex);
+                        DestroyImmediate(kvp.Value.placedObject);
+                    }
+                    //layers[fromIndex].Remove(kvp.Key);
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var key in keysToRemove)
+                layers[fromIndex].Remove(key);
         }
 
 #endif
