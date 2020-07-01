@@ -63,8 +63,10 @@ namespace elZach.LevelEditor
         private void OnGUI()
         {
             if (!CheckForRequirements()) return;
+            EditorGUILayout.BeginHorizontal();
             painting = GUILayout.Toggle(painting, "painting","Button");
-            EditorGUILayout.LabelField(new GUIContent(layerIndex+":"+paletteIndex));
+            EditorGUILayout.LabelField(new GUIContent(layerIndex+":"+paletteIndex),GUILayout.Width(30));
+            EditorGUILayout.EndHorizontal();
             //if (painting)
             {
                 //if (layerIndex < -1 || layerIndex >= t.tileSet.layers.Count) return;
@@ -104,7 +106,7 @@ namespace elZach.LevelEditor
             OnScreenUI(sceneView);
             floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up * activeLayer.rasterSize.y*targetHeigth);
             var e = Event.current;
-            if (painting)
+            if (painting && activeLayer != t.tileSet.defaultLayer)
             {
                 if (e.isMouse)
                 {
@@ -255,7 +257,7 @@ namespace elZach.LevelEditor
                 Rect buttonRect = GUILayoutUtility.GetRect(new GUIContent(i.ToString()), "Button", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.layers[i] ? 60 : 30));
                 if (GUI.Button(buttonRect, i.ToString()))
                 {
-                    
+                    layerIndex = i;
                     int index = i;
                     if(e.button == 1)
                     {
@@ -263,13 +265,13 @@ namespace elZach.LevelEditor
                         menu.AddItem(new GUIContent("Remove Layer " + index + ":" + atlas.layers[index].name), false, () => 
                         {
                             atlas.RemoveLayer(atlas.layers[index]);
+                            paletteIndex = 0;
+                            layerIndex--;
                         });
                         menu.ShowAsContext();
                         e.Use();
-                        layerIndex = -1;
                     }
-                    else
-                        layerIndex = i;
+                        
                 }
             }
             GUI.color = guiColor;
