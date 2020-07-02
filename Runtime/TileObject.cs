@@ -25,7 +25,18 @@ namespace elZach.LevelEditor
         public GameObject prefab;
         public string guid = System.Guid.NewGuid().ToString();
         public TileBehaviour behaviour;
+        [Header("Not In Use yet")]
+        public Vector3 boundSize = Vector3.one;
+        [Header("Will be generated in future")]
         public int3 size = new int3(1, 1, 1);
+        public int3 GetSize(Vector3 rasterScale)
+        {
+            return new int3(
+                Mathf.FloorToInt(boundSize.x / rasterScale.x),
+                Mathf.FloorToInt(boundSize.y / rasterScale.y),
+                Mathf.FloorToInt(boundSize.z / rasterScale.z)
+                );
+        }
 
         [Reorderable]
         public Variant[] variants;
@@ -48,14 +59,17 @@ namespace elZach.LevelEditor
         [UnityEditor.MenuItem("Assets/Tiles/Create Tile From Prefab")]
         static void CreateFromPrefab()
         {
-            GameObject prefab = UnityEditor.Selection.activeObject as GameObject;
-            string path = UnityEditor.AssetDatabase.GetAssetPath(prefab);
-            TileObject tile = CreateInstance<TileObject>();
-            tile.prefab = prefab;
-            var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
-            tile.behaviour = behaviour;
-            if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
-            UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+            foreach (var selectedObject in UnityEditor.Selection.gameObjects)
+            {
+                GameObject prefab = selectedObject; // as GameObject;
+                string path = UnityEditor.AssetDatabase.GetAssetPath(prefab);
+                TileObject tile = CreateInstance<TileObject>();
+                tile.prefab = prefab;
+                var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
+                tile.behaviour = behaviour;
+                if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
+                UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+            }
         }
         
 
