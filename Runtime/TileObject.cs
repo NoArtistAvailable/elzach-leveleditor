@@ -38,7 +38,7 @@ namespace elZach.LevelEditor
                 );
         }
 
-        [Reorderable]
+        //[Reorderable]
         public Variant[] variants;
         
 
