@@ -14,7 +14,7 @@ namespace elZach.LevelEditor
             LevelBuilderWindow window = (LevelBuilderWindow)EditorWindow.GetWindow(typeof(LevelBuilderWindow));
             window.titleContent = new GUIContent("Level Builder");
             window.minSize = new Vector2(100, 100);
-            window.floorPlane = new Plane(Vector3.up, t.transform.position);
+            window.floorPlane = new Plane(Vector3.up, t ? t.transform.position : Vector3.zero);
             window.Show();
         }
 
@@ -340,7 +340,7 @@ namespace elZach.LevelEditor
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) continue;
-                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
+                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                     paletteIcons.Add(new GUIContent(texture));
                 }
             else
@@ -348,7 +348,7 @@ namespace elZach.LevelEditor
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) continue;
-                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
+                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                     paletteIcons.Add(new GUIContent(texture));
                 }
 
@@ -428,7 +428,7 @@ namespace elZach.LevelEditor
             {
                 // Get a preview for the prefab
                 if (!atlasTile) continue;
-                Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefab);
+                Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                 paletteIcons.Add(new GUIContent(texture));
             }
             paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 1, "Button", GUILayout.Width(40), GUILayout.Height(paletteIcons.Count*40));

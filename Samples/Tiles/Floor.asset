@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fda8c512f313cec41b7cd18bd9ec2644, type: 3}
   m_Name: Floor
   m_EditorClassIdentifier: 
-  prefab: {fileID: 3917155598774353213, guid: 155c0ea02ebc8384983dc62c4bf5c41a, type: 3}
+  prefabs:
+  - {fileID: 3917155598774353213, guid: 155c0ea02ebc8384983dc62c4bf5c41a, type: 3}
   guid: 1052708e-2d0b-4365-91ea-128b7fc0fb0a
   behaviour: {fileID: 11400000, guid: aa3de903e50e69f408ee7cc3dc2657e9, type: 2}
+  boundSize: {x: 1, y: 1, z: 1}
   size:
     x: 1
     y: 1

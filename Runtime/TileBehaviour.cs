@@ -5,12 +5,12 @@ using UnityEngine;
 
 namespace elZach.LevelEditor
 {
-    public class TileBehaviour : ScriptableObject, ITileBehaviour
+    public class TileBehaviour : TileBehaviourBase, ITileBehaviour
     {
         public enum RotationBehaviour { None, RotateRandomY = 1 << 1, RotateRandomY90Degree = 1 << 2, AlignToNeighbours = 1 << 3 }
         public RotationBehaviour rotation;
 
-        public virtual void OnPlacement(PlacedTile placedTile, params PlacedTile[] neighbours)
+        public override void OnPlacement(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
             switch (rotation)
             {
@@ -26,7 +26,7 @@ namespace elZach.LevelEditor
             }
         }
 
-        public virtual void OnUpdatedNeighbour(PlacedTile placedTile, params PlacedTile[] neighbours)
+        public override void OnUpdatedNeighbour(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
             if(rotation == RotationBehaviour.AlignToNeighbours)
                 AlignRotationToNeighbours(placedTile, neighbours);

@@ -12,55 +12,66 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fda8c512f313cec41b7cd18bd9ec2644, type: 3}
   m_Name: Wall
   m_EditorClassIdentifier: 
-  prefab: {fileID: 3917155598774353213, guid: a5aff5fa28c1d8943a4ae312636b3e3f, type: 3}
+  prefabs:
+  - {fileID: 3917155598774353213, guid: a5aff5fa28c1d8943a4ae312636b3e3f, type: 3}
   guid: 2a29399e-aec2-42ef-b440-e68dfee12711
   behaviour: {fileID: 11400000, guid: 979d5122e7e5ceb4bbda068afcebbfb5, type: 2}
+  boundSize: {x: 1, y: 1, z: 1}
   size:
     x: 1
     y: 4
     z: 1
   variants:
-  - prefab: {fileID: 3917155598774353213, guid: d5dce947967ca044ea836f585fb1032a, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: d5dce947967ca044ea836f585fb1032a, type: 3}
     condition: 180
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
     condition: 52
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
     condition: 176
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 180, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
     condition: 148
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: -90, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: e7d7c4cd1a246de42a826d0cef7e90f6, type: 3}
     condition: 164
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 90, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
     condition: 20
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 270, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
     condition: 36
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
     condition: 144
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 180, z: 0}
     scale: {x: 1, y: 1, z: 1}
-  - prefab: {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
+  - prefabs:
+    - {fileID: 3917155598774353213, guid: ba1eabf98d166f148a44349604f6a773, type: 3}
     condition: 160
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 90, z: 0}

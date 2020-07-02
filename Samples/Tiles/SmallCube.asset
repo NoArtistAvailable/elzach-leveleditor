@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fda8c512f313cec41b7cd18bd9ec2644, type: 3}
   m_Name: SmallCube
   m_EditorClassIdentifier: 
-  prefab: {fileID: 3917155598774353213, guid: d248ad7f854cba2409f4b5faadadcc9b, type: 3}
+  prefabs:
+  - {fileID: 3917155598774353213, guid: d248ad7f854cba2409f4b5faadadcc9b, type: 3}
   guid: 6f6811c0-22f8-4565-8487-21ed077e093d
   behaviour: {fileID: 11400000, guid: 3d439b28c181aa84b89f1d9bab77a21e, type: 2}
+  boundSize: {x: 1, y: 1, z: 1}
   size:
     x: 1
     y: 1

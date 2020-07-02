@@ -52,6 +52,12 @@ namespace elZach.LevelEditor
             TileFromGuid.Clear();
             foreach(var tile in tiles)
             {
+                if (TileFromGuid.ContainsKey(tile.guid))
+                {
+                    Debug.LogWarning("Guid already exists in Dictionary, make sure that each tile has a unique ID. Removed Tile: " + tile.name + " from atlas " + this.name);
+                    tiles.Remove(tile);
+                    return;
+                }
                 TileFromGuid.Add(tile.guid, tile);
             }
             UnityEditor.EditorUtility.SetDirty(this);

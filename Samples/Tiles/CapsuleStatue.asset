@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fda8c512f313cec41b7cd18bd9ec2644, type: 3}
   m_Name: CapsuleStatue
   m_EditorClassIdentifier: 
-  prefab: {fileID: 7261736369866193204, guid: 3b1e9013005828d44b34837e9ba66e13, type: 3}
+  prefabs:
+  - {fileID: 7261736369866193204, guid: 3b1e9013005828d44b34837e9ba66e13, type: 3}
   guid: c4f66d9d-7c00-45dd-8cc1-10dddf75b62d
   behaviour: {fileID: 11400000, guid: a3160e6a67012f34eb5e7081f79a02fd, type: 2}
+  boundSize: {x: 1, y: 1, z: 1}
   size:
     x: 2
     y: 3
