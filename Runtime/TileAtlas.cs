@@ -32,7 +32,7 @@ namespace elZach.LevelEditor
 
         }
 
-        [Reorderable]
+        //[Reorderable]
         public List<TileObject> tiles;
         public SerializableDictionary<string, TileObject> TileFromGuid = new SerializableDictionary<string, TileObject>();
         public TagLayer defaultLayer = new TagLayer("Default", Color.gray, Vector3.one);
