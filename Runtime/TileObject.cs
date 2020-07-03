@@ -42,22 +42,36 @@ namespace elZach.LevelEditor
         [Button("Calc Bounds")]
         public void CalcBounds()
         {
-            Bounds? bounds = null;
+            Bounds bounds = new Bounds();
+            bounds.center = Vector3.zero; //prefabs[0].transform.position;
+            bounds.size = Vector3.zero;
+            Vector3 _size = Vector3.zero;
             foreach(var renderer in prefabs[0].GetComponentsInChildren<Renderer>())
             {
-                if (bounds == null) bounds = renderer.bounds;
                 var rendererBounds = renderer.bounds;
-                rendererBounds.center = renderer.transform.TransformPoint(rendererBounds.center);
-                rendererBounds.size = renderer.transform.TransformDirection(rendererBounds.size);
-                bounds.Value.Encapsulate(rendererBounds);
+                Vector3 maxPoint = renderer.bounds.max;
+                maxPoint = renderer.transform.TransformVector(maxPoint);
+                _size = Vector3.Max(_size, maxPoint);
+                //rendererBounds.center = renderer.transform.TransformPoint(rendererBounds.center);
+                //rendererBounds.size = renderer.transform.TransformVector(rendererBounds.size);
+                bounds.Encapsulate(rendererBounds);
             }
-            bounds.Value.center = prefabs[0].transform.InverseTransformPoint(bounds.Value.center);
+            //bounds.Value.center = prefabs[0].transform.InverseTransformPoint(bounds.Value.center);
+            //bounds.center = prefabs[0].transform.InverseTransformPoint(bounds.center);
+            //bounds.size = prefabs[0].transform.InverseTransformVector(bounds.size);
 
-            boundSize = new Vector3(
-                bounds.Value.size.x + Mathf.Abs(bounds.Value.center.x),
-                bounds.Value.size.y + Mathf.Abs(bounds.Value.center.y),
-                bounds.Value.size.z + Mathf.Abs(bounds.Value.center.z)
-                );
+            //boundSize = _size; // - prefabs[0].transform.position;
+
+            //boundSize = new Vector3(
+            //    bounds.size.x,// + Mathf.Abs(bounds.center.x),
+            //    bounds.size.y,// + Mathf.Abs(bounds.center.y),
+            //    bounds.size.z// + Mathf.Abs(bounds.center.z)
+            //    );
+
+            Vector3 newSize = bounds.max - prefabs[0].transform.position;
+            newSize.x *= 2f;
+            newSize.z *= 2f;
+            boundSize = newSize;
         }
 
         public int3 GetSize(Vector3 rasterScale)
