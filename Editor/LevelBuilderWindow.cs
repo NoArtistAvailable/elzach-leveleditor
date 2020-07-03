@@ -398,7 +398,7 @@ namespace elZach.LevelEditor
                     }
 
                 }
-                if (i % (int)(columnCount-1) == 0 && i != 0)
+                if (i % (int)(columnCount) == columnCount-1)// && i != 0)
                 {
                     EditorGUILayout.EndHorizontal();
                     EditorGUILayout.BeginHorizontal();
