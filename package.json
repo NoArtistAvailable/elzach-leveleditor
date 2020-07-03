@@ -21,5 +21,12 @@
     "elzach.extensions": "0.0.1",
     "com.unity.mathematics": "1.1.0"
   },
-  "hideInEditor": false
+  "hideInEditor": false,
+  "samples": [
+    {
+      "displayName": "Getting Started - Example Tiles",
+      "description": "Example tiles atlas.",
+      "path": "Samples~/GettingStarted"
+    }
+  ]
 }
