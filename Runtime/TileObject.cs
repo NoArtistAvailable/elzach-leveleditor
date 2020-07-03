@@ -18,6 +18,13 @@ namespace elZach.LevelEditor
             public Vector3 position = Vector3.zero;
             public Vector3 rotation = Vector3.zero;
             public Vector3 scale = Vector3.one;
+
+            public Variant()
+            {
+                position = Vector3.zero;
+                rotation = Vector3.zero;
+                scale = Vector3.one;
+            }
         }
 
         [System.Flags]
@@ -31,12 +38,34 @@ namespace elZach.LevelEditor
         public Vector3 boundSize = Vector3.one;
         [Header("Will be generated in future")]
         public int3 size = new int3(1, 1, 1);
+        
+        [Button("Calc Bounds")]
+        public void CalcBounds()
+        {
+            Bounds? bounds = null;
+            foreach(var renderer in prefabs[0].GetComponentsInChildren<Renderer>())
+            {
+                if (bounds == null) bounds = renderer.bounds;
+                var rendererBounds = renderer.bounds;
+                rendererBounds.center = renderer.transform.TransformPoint(rendererBounds.center);
+                rendererBounds.size = renderer.transform.TransformDirection(rendererBounds.size);
+                bounds.Value.Encapsulate(rendererBounds);
+            }
+            bounds.Value.center = prefabs[0].transform.InverseTransformPoint(bounds.Value.center);
+
+            boundSize = new Vector3(
+                bounds.Value.size.x + Mathf.Abs(bounds.Value.center.x),
+                bounds.Value.size.y + Mathf.Abs(bounds.Value.center.y),
+                bounds.Value.size.z + Mathf.Abs(bounds.Value.center.z)
+                );
+        }
+
         public int3 GetSize(Vector3 rasterScale)
         {
             return new int3(
-                Mathf.FloorToInt(boundSize.x / rasterScale.x),
-                Mathf.FloorToInt(boundSize.y / rasterScale.y),
-                Mathf.FloorToInt(boundSize.z / rasterScale.z)
+                Mathf.Max(1, Mathf.FloorToInt(boundSize.x / rasterScale.x)),
+                Mathf.Max(1, Mathf.FloorToInt(boundSize.y / rasterScale.y)),
+                Mathf.Max(1, Mathf.FloorToInt(boundSize.z / rasterScale.z))
                 );
         }
 
