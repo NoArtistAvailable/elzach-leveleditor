@@ -448,29 +448,29 @@ namespace elZach.LevelEditor
             {
                 if (i == layerIndex) continue;
                 int weird = i;
-                menu.AddItem(new GUIContent("Move to Layer " + weird), false, () =>
+                menu.AddItem(new GUIContent("Move to Layer/Layer " + weird+ " : "+atlas.layers[weird].name), false, () =>
                 {
                     Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
                     atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird]);
                     t.MoveExistingTilesToLayer(buttonTileObject, layerIndex ,weird);
                 });
             }
-            menu.AddItem(new GUIContent("Move to and create new Layer"), false, () =>
-            {
-                atlas.AddTagLayer();
-                atlas.MoveTileToLayer(buttonTileObject, atlas.layers[atlas.layers.Count - 1]);
-            });
-            menu.AddSeparator("");
             for (int i = 0; i < atlas.layers.Count; i++)
             {
                 if (i == layerIndex) continue;
                 int weird = i;
-                menu.AddItem(new GUIContent("Add to Layer " + weird), false, () =>
+                menu.AddItem(new GUIContent("Add to Layer/Layer " + weird +" : "+atlas.layers[weird].name), false, () =>
                 {
                     Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
                     atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird], true);
                 });
             }
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Move to and create new Layer"), false, () =>
+            {
+                atlas.AddTagLayer();
+                atlas.MoveTileToLayer(buttonTileObject, atlas.layers[atlas.layers.Count - 1]);
+            });
             menu.ShowAsContext();
 
             e.Use();

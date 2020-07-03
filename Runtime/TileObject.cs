@@ -81,9 +81,9 @@ namespace elZach.LevelEditor
         static bool ValidateCreateAndAddToAtlas()
         {
             bool valid = UnityEditor.Selection.activeObject is GameObject;
-            var builder = FindObjectOfType<LevelBuilder>();
-            valid &= builder;
-            valid &= builder?.tileSet;
+            //var builder = FindObjectOfType<LevelBuilder>();
+            //valid &= builder;
+            //valid &= builder?.tileSet;
             return valid;
         }
 
@@ -91,6 +91,8 @@ namespace elZach.LevelEditor
         static void CreateAndAddToAtlas()
         {
             var builder = FindObjectOfType<LevelBuilder>();
+            if(!builder) { Debug.LogWarning("Create a level builder in scene."); return; }
+            if (!builder.tileSet) { Debug.LogWarning("Add a tileatlas to builder."); return; }
             var newTiles = CreateFromPrefab();
             foreach (var selectedObject in newTiles)
             {
@@ -126,9 +128,9 @@ namespace elZach.LevelEditor
         static bool ValidateAddTileToCurrentAtlas()
         {
             bool valid = UnityEditor.Selection.activeObject is TileObject;
-            var builder = FindObjectOfType<LevelBuilder>();
-            valid &= builder;
-            valid &= builder?.tileSet;
+            //var builder = FindObjectOfType<LevelBuilder>();
+            //valid &= builder;
+            //valid &= builder?.tileSet;
             return valid;
         }
 
@@ -136,6 +138,8 @@ namespace elZach.LevelEditor
         static void AddTileToCurrentAtlas()
         {
             var builder = FindObjectOfType<LevelBuilder>();
+            if (!builder) { Debug.LogWarning("Create a level builder in scene."); return; }
+            if (!builder.tileSet) { Debug.LogWarning("Add a tileatlas to builder."); return; }
             foreach (var selectedObject in UnityEditor.Selection.objects)
             {
                 if (selectedObject is TileObject)
