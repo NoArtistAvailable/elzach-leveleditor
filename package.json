@@ -6,7 +6,7 @@
     "email": "dont@message.me",
     "url": "-"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "unity": "2020.2",
   "unityRelease": "0a15",
   "displayName": "elZach LevelEditor",
@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/felix.reinemann/elzach-leveleditor.git"
+    "url": "https://github.com/NoArtistAvailable/elzach-leveleditor.git"
   },
   "dependencies": {
     "elzach.extensions": "0.0.1",
