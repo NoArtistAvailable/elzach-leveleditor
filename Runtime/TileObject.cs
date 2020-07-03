@@ -26,7 +26,7 @@ namespace elZach.LevelEditor
         public GameObject prefab { get { return prefabs[UnityEngine.Random.Range(0, prefabs.Length)]; } }
         public GameObject[] prefabs;
         public string guid = System.Guid.NewGuid().ToString();
-        public TileBehaviour behaviour;
+        public TileBehaviourBase behaviour;
         [Header("Not In Use yet")]
         public Vector3 boundSize = Vector3.one;
         [Header("Will be generated in future")]
