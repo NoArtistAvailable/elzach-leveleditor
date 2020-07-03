@@ -389,7 +389,7 @@ namespace elZach.LevelEditor
                     paletteIndex = i;
                     if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
                     {
-                        Debug.Log("Add Tile to layer Menu");
+                        AddTileToLayerMenu(atlas,activeLayer,e);
                         paletteIndex = 0;
                     }
                     else if (e.button == 1 || activeLayer == atlas.defaultLayer) // rightclick
@@ -490,6 +490,16 @@ namespace elZach.LevelEditor
             {
                 t.ClearLayer(index);
             });
+            menu.ShowAsContext();
+            e.Use();
+        }
+
+        void AddTileToLayerMenu(TileAtlas atlas, TileAtlas.TagLayer layer, Event e)
+        {
+            GenericMenu menu = new GenericMenu();
+            menu.AddDisabledItem(new GUIContent("Tile from other layer [Not Implemented]"));
+            menu.AddDisabledItem(new GUIContent("Tile from project files [Not Implemented]"));
+            menu.AddDisabledItem(new GUIContent("Generate Tile from Gameobject [Not Implemented]"));
             menu.ShowAsContext();
             e.Use();
         }
