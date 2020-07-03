@@ -43,7 +43,7 @@ namespace elZach.LevelEditor
         public void CalcBounds()
         {
             Bounds bounds = new Bounds();
-            bounds.center = Vector3.zero; //prefabs[0].transform.position;
+            bounds.center = prefabs[0].transform.position;
             bounds.size = Vector3.zero;
             Vector3 _size = Vector3.zero;
             foreach(var renderer in prefabs[0].GetComponentsInChildren<Renderer>())
@@ -52,21 +52,8 @@ namespace elZach.LevelEditor
                 Vector3 maxPoint = renderer.bounds.max;
                 maxPoint = renderer.transform.TransformVector(maxPoint);
                 _size = Vector3.Max(_size, maxPoint);
-                //rendererBounds.center = renderer.transform.TransformPoint(rendererBounds.center);
-                //rendererBounds.size = renderer.transform.TransformVector(rendererBounds.size);
                 bounds.Encapsulate(rendererBounds);
             }
-            //bounds.Value.center = prefabs[0].transform.InverseTransformPoint(bounds.Value.center);
-            //bounds.center = prefabs[0].transform.InverseTransformPoint(bounds.center);
-            //bounds.size = prefabs[0].transform.InverseTransformVector(bounds.size);
-
-            //boundSize = _size; // - prefabs[0].transform.position;
-
-            //boundSize = new Vector3(
-            //    bounds.size.x,// + Mathf.Abs(bounds.center.x),
-            //    bounds.size.y,// + Mathf.Abs(bounds.center.y),
-            //    bounds.size.z// + Mathf.Abs(bounds.center.z)
-            //    );
 
             Vector3 newSize = bounds.max - prefabs[0].transform.position;
             newSize.x *= 2f;
