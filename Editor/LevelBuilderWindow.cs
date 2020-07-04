@@ -149,6 +149,7 @@ namespace elZach.LevelEditor
         }
 
         int3? rectStartTile;
+        int3 lastTileMousePos;
         void OnSceneGridBrush(Event e, SceneView sceneView, TileAtlas.TagLayer activeLayer)
         {
             if (painting && activeLayer != t.tileSet.defaultLayer)
@@ -180,7 +181,7 @@ namespace elZach.LevelEditor
                 }
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                 {
-                    if (e.type == EventType.MouseDown)
+                    if (!tileMousePosition.Equals(lastTileMousePos))
                         DrawTiles(sceneView, e, tileMousePosition, true);
                     else
                         DrawTiles(sceneView, e, tileMousePosition, false);
@@ -206,6 +207,8 @@ namespace elZach.LevelEditor
                     else if (e.button == 1) EraseMultipleTiles(rectStartTile.Value, tileMousePosition);
                     rectStartTile = null;
                 }
+
+                lastTileMousePos = tileMousePosition;
             }
         }
 
