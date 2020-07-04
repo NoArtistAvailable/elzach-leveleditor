@@ -33,7 +33,7 @@ namespace elZach.LevelEditor
         public GameObject prefab { get { return prefabs[UnityEngine.Random.Range(0, prefabs.Length)]; } }
         public GameObject[] prefabs;
         public string guid = System.Guid.NewGuid().ToString();
-        public TileBehaviourBase behaviour;
+        public List<TileBehaviourBase> behaviours = new List<TileBehaviourBase>();
         [Header("Not In Use yet")]
         public Vector3 boundSize = Vector3.one;
         
@@ -78,6 +78,18 @@ namespace elZach.LevelEditor
         //[Reorderable]
         public Variant[] variants;
         
+        public void PlaceBehaviour(PlacedTile placed, params PlacedTile[] neighbours)
+        {
+            foreach (var behaviour in behaviours)
+                behaviour.OnPlacement(placed, neighbours);
+        }
+
+        public void UpdateBehaviour(PlacedTile placed, params PlacedTile[] neighbours)
+        {
+            foreach (var behaviour in behaviours)
+                behaviour.OnUpdatedNeighbour(placed, neighbours);
+        }
+
 
 #if UNITY_EDITOR
 
@@ -89,7 +101,7 @@ namespace elZach.LevelEditor
             TileObject tile = CreateInstance<TileObject>();
             tile.prefabs = selectedObjects;
             var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
-            tile.behaviour = behaviour;
+            tile.behaviours = new List<TileBehaviourBase>() { behaviour };
             tile.CalcBounds();
             if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
             UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");

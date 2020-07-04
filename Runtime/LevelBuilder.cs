@@ -130,9 +130,9 @@ namespace elZach.LevelEditor
                     for (int z = 0; z < tileSize.z; z++)
                         layers[layerIndex].Add(position + new int3(x, y, z), placedTile);
             var neighbs = GetNeighbours(placedTile, layerIndex);
-            if (atlasTile.behaviour) atlasTile.behaviour.OnPlacement(placedTile, neighbs);
+            atlasTile.PlaceBehaviour(placedTile, neighbs);
             foreach (var neighb in neighbs)
-                neighb.tileObject.behaviour?.OnUpdatedNeighbour(neighb, GetNeighbours(neighb, layerIndex));
+                neighb.tileObject.UpdateBehaviour(neighb, GetNeighbours(neighb, layerIndex));
             EditorUtility.SetDirty(gameObject);
         }
 
