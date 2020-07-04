@@ -80,6 +80,22 @@ namespace elZach.LevelEditor
         
 
 #if UNITY_EDITOR
+
+        public static TileObject CreateNewTileFileFromPrefabs(params GameObject[] selectedObjects)
+        {
+            if (selectedObjects.Length == 0) { Debug.LogWarning("[TileObject] cannot create TileObject without gameObject or path"); return null; }
+            GameObject prefab = selectedObjects[0]; // as GameObject;
+            string path = UnityEditor.AssetDatabase.GetAssetPath(prefab);
+            TileObject tile = CreateInstance<TileObject>();
+            tile.prefabs = selectedObjects;
+            var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
+            tile.behaviour = behaviour;
+            tile.CalcBounds();
+            if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
+            UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+            return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
+        }
+
         [Button("Get new guid")]
         public void GetNewGuid()
         {
@@ -99,15 +115,7 @@ namespace elZach.LevelEditor
             List<TileObject> newTiles = new List<TileObject>();
             foreach (var selectedObject in UnityEditor.Selection.gameObjects)
             {
-                GameObject prefab = selectedObject; // as GameObject;
-                string path = UnityEditor.AssetDatabase.GetAssetPath(prefab);
-                TileObject tile = CreateInstance<TileObject>();
-                tile.prefabs = new GameObject[] { prefab };
-                var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
-                tile.behaviour = behaviour;
-                if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
-                UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
-                newTiles.Add(UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path+".asset"));
+                newTiles.Add(CreateNewTileFileFromPrefabs(selectedObject));
             }
             return newTiles;
         }
@@ -148,15 +156,7 @@ namespace elZach.LevelEditor
         [UnityEditor.MenuItem("Assets/Tiles/Create Tile and add multiple GameObjects")]
         static void CreateMultipleGOTile()
         {
-            GameObject firstObject = UnityEditor.Selection.activeGameObject;
-            string path = UnityEditor.AssetDatabase.GetAssetPath(firstObject);
-            TileObject tile = CreateInstance<TileObject>();
-            tile.prefabs = UnityEditor.Selection.gameObjects;
-            var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
-            tile.behaviour = behaviour;
-
-            if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
-            UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+            CreateNewTileFileFromPrefabs(UnityEditor.Selection.gameObjects);
         }
 
         [UnityEditor.MenuItem("Assets/Tiles/Add Tile To Current Atlas", true)]

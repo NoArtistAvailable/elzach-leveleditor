@@ -78,7 +78,7 @@ namespace elZach.LevelEditor
                 else if (t.tileSet.layers[layerIndex]?.layerObjects.Count>0)
                     selectedTileGuid = t.tileSet.layers[layerIndex]?.layerObjects[paletteIndex]?.guid;
                 if(!string.IsNullOrEmpty(selectedTileGuid))
-                    selectedTile = t.tileSet.TileFromGuid[selectedTileGuid];
+                    t.tileSet.TileFromGuid.TryGetValue(selectedTileGuid,out selectedTile);
                 if(!selectedTile)
                 {
                     selectedTile = t.tileSet.tiles[0];
@@ -335,14 +335,26 @@ namespace elZach.LevelEditor
             //-----
             paletteScroll = EditorGUILayout.BeginScrollView(paletteScroll);
             List<GUIContent> paletteIcons = new List<GUIContent>();
-            if (activeLayer==atlas.defaultLayer)
+            if (activeLayer == atlas.defaultLayer)
+            {
                 foreach (var atlasTile in atlas.TileFromGuid.Values)
                 {
+                    TileAtlas.TagLayer tileLayer = null;
+                    foreach(var layer in atlas.layers)
+                        if (layer.layerObjects.Contains(atlasTile))
+                        {
+                            tileLayer = layer;
+                            break;
+                        }
+
+                    //if (tileLayer != null) continue;
                     // Get a preview for the prefab
                     if (!atlasTile) continue;
                     Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                     paletteIcons.Add(new GUIContent(texture));
                 }
+                if (paletteIcons.Count == 0) EditorGUILayout.HelpBox("No unsorted tiles in atlas",MessageType.Info);
+            }
             else
                 foreach (var atlasTile in activeLayer.layerObjects)
                 {
@@ -392,7 +404,7 @@ namespace elZach.LevelEditor
                         AddTileToLayerMenu(atlas,activeLayer,e);
                         paletteIndex = 0;
                     }
-                    else if (e.button == 1 || activeLayer == atlas.defaultLayer) // rightclick
+                    else if (e.button == 1 ) // rightclick
                     {
                         TileRightClickMenu(e, buttonTileObject, atlas);
                     }
@@ -455,16 +467,40 @@ namespace elZach.LevelEditor
                     t.MoveExistingTilesToLayer(buttonTileObject, layerIndex ,weird);
                 });
             }
-            for (int i = 0; i < atlas.layers.Count; i++)
+
+            menu.AddItem(new GUIContent("Remove/Clear Tiles from Layer"), false, () =>
             {
-                if (i == layerIndex) continue;
-                int weird = i;
-                menu.AddItem(new GUIContent("Add to Layer/Layer " + weird +" : "+atlas.layers[weird].name), false, () =>
+                if(layerIndex > 0 && layerIndex < atlas.layers.Count)
+                    t.RemovePlacedTiles(buttonTileObject, layerIndex);
+            });
+            menu.AddItem(new GUIContent("Remove/Clear Tiles from Layer and move to Unsorted"), false, () =>
+            {
+                if (layerIndex > 0 && layerIndex < atlas.layers.Count)
                 {
-                    Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
-                    atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird], true);
-                });
-            }
+                    t.RemovePlacedTiles(buttonTileObject, layerIndex);
+                    atlas.RemoveTileFromLayer(buttonTileObject, atlas.layers[layerIndex]);
+                }
+            });
+            menu.AddItem(new GUIContent("Remove/Clear Tiles and remove from Atlas"), false, () =>
+            {
+                if (layerIndex > 0 && layerIndex < atlas.layers.Count)
+                {
+                    t.RemovePlacedTiles(buttonTileObject, layerIndex);
+                    atlas.RemoveTileFromLayer(buttonTileObject, atlas.layers[layerIndex]);
+                }
+                atlas.RemoveFromAtlas(buttonTileObject);
+            });
+            // ----------------- disabled multi layer support for now and see if a need arises -----------------//
+            //for (int i = 0; i < atlas.layers.Count; i++)
+            //{
+            //    if (i == layerIndex) continue;
+            //    int weird = i;
+            //    menu.AddItem(new GUIContent("Add to Layer/Layer " + weird +" : "+atlas.layers[weird].name), false, () =>
+            //    {
+            //        Debug.Log(weird + ":" + atlas.layers.Count + " obj: " + buttonTileObject.name);
+            //        atlas.MoveTileToLayer(buttonTileObject, atlas.layers[weird], true);
+            //    });
+            //}
             menu.AddSeparator("");
             menu.AddItem(new GUIContent("Move to and create new Layer"), false, () =>
             {

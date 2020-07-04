@@ -61,30 +61,50 @@ namespace elZach.LevelEditor
             }
             UnityEditor.EditorUtility.SetDirty(this);
         }
-#endif
-
-        public TileObject GetTile(int index)
-        {
-            return tiles[index];
-        }
 
         public void MoveTileToLayer(TileObject tile, TagLayer layer, bool allowMultiLayer = false)
         {
-            if (!tiles.Contains(tile)) { Debug.LogWarning("Atlas doesnt contain tile "+tile.name, this); return; }
-            if (layer.layerObjects.Contains(tile)) { Debug.Log("Layer already contains tile "+tile.name, this); return; }
+            if (!tiles.Contains(tile)) { Debug.LogWarning("Atlas doesnt contain tile " + tile.name, this); return; }
+            if (layer.layerObjects.Contains(tile)) { Debug.Log("Layer already contains tile " + tile.name, this); return; }
 
             if (!allowMultiLayer)
-                foreach(var lay in layers)
+                foreach (var lay in layers)
                     if (lay != layer)
-                        if(lay.layerObjects.Contains(tile))
+                        if (lay.layerObjects.Contains(tile))
                             lay.layerObjects.Remove(tile);
 
             layer.layerObjects.Add(tile);
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+
+        public void RemoveTileFromLayer(TileObject tile, TagLayer layer)
+        {
+            if(layer.layerObjects.Contains(tile))
+                layer.layerObjects.Remove(tile);
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+
+        public void RemoveFromAtlas(TileObject tile)
+        {
+            foreach (var layer in layers)
+                if (layer.layerObjects.Contains(tile))
+                    RemoveTileFromLayer(tile, layer);
+            TileFromGuid.Remove(tile.guid);
+            tiles.Remove(tile);
+            UnityEditor.EditorUtility.SetDirty(this);
         }
 
         public void RemoveLayer(TagLayer layer)
         {
             layers.Remove(layer);
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+
+#endif
+
+        public TileObject GetTile(int index)
+        {
+            return tiles[index];
         }
 
     }

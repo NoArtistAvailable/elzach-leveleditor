@@ -157,6 +157,22 @@ namespace elZach.LevelEditor
                     }
         }
 
+        public void RemovePlacedTiles(TileObject tile, int layerIndex)
+        {
+            List<int3> keysToRemove = new List<int3>();
+            foreach (var kvp in layers[layerIndex])
+            {
+                if (kvp.Value.tileObject == tile)
+                {
+                    if(kvp.Value.placedObject)
+                        DestroyImmediate(kvp.Value.placedObject);
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var key in keysToRemove)
+                layers[layerIndex].Remove(key);
+        }
+
         public void ClearLevel()
         {
             foreach (var layer in layers)
@@ -234,7 +250,8 @@ namespace elZach.LevelEditor
                     else
                     {
                         //Debug.Log(kvp.Key + " already set in " + toIndex);
-                        DestroyImmediate(kvp.Value.placedObject);
+                        if(kvp.Value.placedObject)
+                            DestroyImmediate(kvp.Value.placedObject);
                     }
                     //layers[fromIndex].Remove(kvp.Key);
                     keysToRemove.Add(kvp.Key);
