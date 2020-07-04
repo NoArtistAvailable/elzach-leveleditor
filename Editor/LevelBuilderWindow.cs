@@ -72,7 +72,8 @@ namespace elZach.LevelEditor
             {
                 //if (layerIndex < -1 || layerIndex >= t.tileSet.layers.Count) return;
                 layerIndex = Mathf.Clamp(layerIndex, -1, t.tileSet.layers.Count - 1);
-                paletteIndex = Mathf.Clamp(paletteIndex, 0, layerIndex == -1 ? (t.tileSet.tiles.Count-1) : (t.tileSet.layers[layerIndex].layerObjects.Count-1));
+                paletteIndex = Mathf.Clamp(paletteIndex, 0, 
+                    layerIndex == -1 ? (t.tileSet.tiles.Count-1) : (t.tileSet.layers[layerIndex].layerObjects.Count-1));
                 paletteIndex = Mathf.Max(0, paletteIndex);
                 if (layerIndex == -1)
                     selectedTileGuid = t.tileSet.tiles[paletteIndex].guid;
@@ -132,7 +133,7 @@ namespace elZach.LevelEditor
             }
             DrawPalette(t.tileSet, Event.current);
             if (GUILayout.Button("Select Atlas")) Selection.activeObject = t.tileSet;
-            if(GUILayout.Button("Clear Level"))t.ClearLevel(); 
+            if (GUILayout.Button("Clear Level")) t.ClearLevel();
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -377,6 +378,9 @@ namespace elZach.LevelEditor
             //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
             float columnCount = 4f;
             EditorGUILayout.BeginHorizontal();
+            GUIStyle iconLabel = "Label";
+            iconLabel.alignment = TextAnchor.UpperCenter;
+            iconLabel.normal.textColor = Color.white;
             for(int i=0; i < paletteIcons.Count; i++)
             {
                 Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width((position.width - 60) / columnCount));
@@ -411,9 +415,12 @@ namespace elZach.LevelEditor
 
                 GUI.backgroundColor = tileLayer!=null?tileLayer.color:guiColor;
                 GUI.Toggle(buttonRect, paletteIndex == i, paletteIcons[i], "Button");
+                if (buttonTileObject) GUI.Label(buttonRect, buttonTileObject.name, iconLabel);
                 if (clickHere)
                 {
                     paletteIndex = i;
+                    if (activeLayer == atlas.defaultLayer)
+                        Selection.activeObject = buttonTileObject;
                     if (activeLayer != atlas.defaultLayer && i == paletteIcons.Count - 1)
                     {
                         AddTileToLayerMenu(atlas,activeLayer,e);
@@ -432,11 +439,16 @@ namespace elZach.LevelEditor
                 }
             }
             EditorGUILayout.EndHorizontal();
-            
-            if (activeLayer==atlas.defaultLayer)
+
+            if (activeLayer == atlas.defaultLayer)
                 selectedTileGuid = atlas.tiles[paletteIndex].guid;
             else
-                selectedTileGuid = activeLayer.layerObjects[paletteIndex].guid;
+            {
+                if (paletteIndex >= activeLayer.layerObjects.Count) paletteIndex = 0;
+                if (activeLayer.layerObjects[paletteIndex])
+                    selectedTileGuid = activeLayer.layerObjects[paletteIndex].guid;
+                else selectedTileGuid = "";
+            }
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndHorizontal();
@@ -557,6 +569,7 @@ namespace elZach.LevelEditor
             menu.AddDisabledItem(new GUIContent("Tile from other layer [Not Implemented]"));
             menu.AddDisabledItem(new GUIContent("Tile from project files [Not Implemented]"));
             menu.AddDisabledItem(new GUIContent("Generate Tile from Gameobject [Not Implemented]"));
+            menu.AddItem(new GUIContent("Drag and Drop files here!"), true, () => { });
             menu.ShowAsContext();
             e.Use();
         }

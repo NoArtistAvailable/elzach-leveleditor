@@ -108,6 +108,7 @@ namespace elZach.LevelEditor
             Undo.RegisterCompleteObjectUndo(this, "Created New Tile Object");
             TileObject atlasTile;
             tileSet.TileFromGuid.TryGetValue(guid, out atlasTile);
+            if (!atlasTile) { Debug.LogError("No Tile with guid [" + guid + "] found in atlas " + tileSet.name, tileSet); return; }
             var go = (GameObject)PrefabUtility.InstantiatePrefab(atlasTile.prefab) as GameObject;
             
             if (!go) { Debug.LogError("No GameObject found at Tile with guid " + guid); return; }
