@@ -34,9 +34,9 @@ namespace elZach.LevelEditor
         public GameObject[] prefabs;
         public string guid = System.Guid.NewGuid().ToString();
         public List<TileBehaviourBase> behaviours = new List<TileBehaviourBase>();
-        [Header("Not In Use yet")]
+        [Header("Size")]
         public Vector3 boundSize = Vector3.one;
-        
+        public bool roundUp = false;
         [Button("Calc Bounds")]
         public void CalcBounds()
         {
@@ -59,9 +59,9 @@ namespace elZach.LevelEditor
             boundSize = newSize;
         }
 
-        public int3 GetSize(Vector3 rasterScale, bool toCeil = false)
+        public int3 GetSize(Vector3 rasterScale)
         {
-            if(toCeil)
+            if(roundUp)
                 return new int3(
                     Mathf.Max(1, Mathf.CeilToInt(boundSize.x / rasterScale.x)),
                     Mathf.Max(1, Mathf.CeilToInt(boundSize.y / rasterScale.y)),
