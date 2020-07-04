@@ -102,9 +102,8 @@ namespace elZach.LevelEditor
 
 #if UNITY_EDITOR
 
-        public void PlaceTile(string guid, int3 position, int layerIndex, TileAtlas.TagLayer tagLayer)
+        public void PlaceTile(string guid, int3 position, int layerIndex, TileAtlas.TagLayer tagLayer, bool updateNeighbours = true)
         {
-
             Undo.RegisterCompleteObjectUndo(this, "Created New Tile Object");
             TileObject atlasTile;
             tileSet.TileFromGuid.TryGetValue(guid, out atlasTile);
@@ -141,15 +140,35 @@ namespace elZach.LevelEditor
                         layers[layerIndex].Add(position + new int3(x, y, z), placedTile);
             var neighbs = GetNeighbours(placedTile, layerIndex);
             atlasTile.PlaceBehaviour(placedTile, neighbs);
-            foreach (var neighb in neighbs)
-                neighb.tileObject.UpdateBehaviour(neighb, GetNeighbours(neighb, layerIndex));
+            if (updateNeighbours)
+                foreach (var neighb in neighbs)
+                {
+                    //Undo.RecordObject(neighb.placedObject, "Before Updating Object");
+                    neighb.tileObject.UpdateBehaviour(neighb, GetNeighbours(neighb, layerIndex));
+                }
 
             Undo.RegisterCreatedObjectUndo(placedTile.placedObject, "Created New Tile Object");
             EditorUtility.SetDirty(gameObject);
         }
 
+        public void UpdateMultiple(int3 startPosition, int3 endPosition, int layerIndex)
+        {
+            Debug.LogWarning("Doesnt seem to work for now");
+            int3 minPosition = math.min(startPosition, endPosition);
+            int3 maxPosition = math.max(startPosition, endPosition);
+            int y = minPosition.y;
+            for(int x = 0; x <= endPosition.x - startPosition.x; x++)
+                for (int z = 0; z <= endPosition.z - startPosition.z; z++)
+                {
+                    PlacedTile val;
+                    if (layers[layerIndex].TryGetValue(new int3(x, y, z), out val))
+                        val.tileObject.UpdateBehaviour(val, GetNeighbours(val, layerIndex));
+                }
+        }
+
         public void RemoveTile(int3 position, int layerIndex)
         {
+            if (layerIndex >= layers.Count) return;
             PlacedTile target;
             if (layers[layerIndex].TryGetValue(position, out target))
             {

@@ -21,7 +21,7 @@ namespace elZach.LevelEditor
                     placedTile.placedObject.transform.localRotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0, 4) * 90f, 0f);
                     break;
                 case RotationBehaviour.AlignToNeighbours:
-                    AlignRotationToNeighbours(placedTile, neighbours);
+                    AlignRotationToNeighbours(placedTile, false ,neighbours);
                     break;
             }
         }
@@ -29,13 +29,14 @@ namespace elZach.LevelEditor
         public override void OnUpdatedNeighbour(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
             if(rotation == RotationBehaviour.AlignToNeighbours)
-                AlignRotationToNeighbours(placedTile, neighbours);
+                AlignRotationToNeighbours(placedTile, true ,neighbours);
         }
 
 
 #if UNITY_EDITOR
-        public void AlignRotationToNeighbours(PlacedTile placedTile, params PlacedTile[] neighbours)
+        public void AlignRotationToNeighbours(PlacedTile placedTile, bool registerUndo = true, params PlacedTile[] neighbours)
         {
+            //UnityEditor.Undo.RegisterCompleteObjectUndo(placedTile.placedObject.transform, "Updated Placed Object Transform");
             if (neighbours.Length == 0) return;
             TileObject.Neighbour neighbourMask=TileObject.Neighbour.None;
             foreach(var neighbour in neighbours)
@@ -43,10 +44,6 @@ namespace elZach.LevelEditor
                 if (neighbour.guid != placedTile.guid) continue;
                 int3 relative = neighbour.position - placedTile.position;
                 neighbourMask |= GetNeighbourEnumFromRelative(relative);
-                //if (relative.x != 0) // has neighbour on x
-                //    placedTile.placedObject.transform.localRotation = Quaternion.identity;
-                //else
-                //    placedTile.placedObject.transform.localRotation = Quaternion.Euler(Vector3.up * 90f);
             }
 
             foreach(var variant in placedTile.tileObject.variants)
@@ -59,10 +56,15 @@ namespace elZach.LevelEditor
                         //Debug.Log("[TileBehaviour] Replacing " + linkedPrefab.name + " by " + variant.prefab.name);
                         var parent = placedTile.placedObject.transform.parent;
                         var position = placedTile.placedObject.transform.localPosition;
-                        DestroyImmediate(placedTile.placedObject);
+                        if (registerUndo)
+                            UnityEditor.Undo.DestroyObjectImmediate(placedTile.placedObject);
+                        else
+                            DestroyImmediate(placedTile.placedObject);
                         placedTile.placedObject = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(variant.prefab) as GameObject;
                         placedTile.placedObject.transform.SetParent(parent);
                         placedTile.placedObject.transform.localPosition = position + variant.position;
+                        if(registerUndo)
+                            UnityEditor.Undo.RegisterCreatedObjectUndo(placedTile.placedObject, "Updated Placed Object");
                     }
                     var transf = placedTile.placedObject.transform;
                     transf.localRotation = Quaternion.Euler(variant.rotation);

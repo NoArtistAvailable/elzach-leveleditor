@@ -145,6 +145,12 @@ namespace elZach.LevelEditor
             OnScreenUI(sceneView);
             floorPlane = new Plane(t.transform.up, t.transform.position + Vector3.up * activeLayer.rasterSize.y*targetHeigth);
             var e = Event.current;
+            OnSceneGridBrush(e, sceneView, activeLayer);
+        }
+
+        int3? rectStartTile;
+        void OnSceneGridBrush(Event e, SceneView sceneView, TileAtlas.TagLayer activeLayer)
+        {
             if (painting && activeLayer != t.tileSet.defaultLayer)
             {
                 if (e.isMouse)
@@ -161,17 +167,53 @@ namespace elZach.LevelEditor
                 //Handles.DrawWireDisc(t.TilePositionToLocalPosition(tileMousePosition, selectedTile.size), Vector3.up, 0.5f * selectedTile.size.x);
                 Handles.color = activeLayer.color + Color.gray;
                 int3 brushSize = selectedTile ? selectedTile.GetSize(activeLayer.rasterSize) : new int3(1, 1, 1);
-                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, activeLayer) + Vector3.up * brushSize.y * 0.5f * activeLayer.rasterSize.y, new Vector3(brushSize.x * activeLayer.rasterSize.x, brushSize.y * activeLayer.rasterSize.y, brushSize.z * activeLayer.rasterSize.z));
+                DrawBrushGizmo(tileMousePosition, brushSize, activeLayer);
+                if (rectStartTile != null && !rectStartTile.Value.Equals(tileMousePosition)) // rectbrush
+                {
+                    for (int x = 0; x <= Mathf.Abs(Mathf.FloorToInt((tileMousePosition.x - rectStartTile.Value.x) / brushSize.x)); x++)
+                        for (int z = 0; z <= Mathf.Abs(Mathf.FloorToInt((tileMousePosition.z - rectStartTile.Value.z) / brushSize.z)); z++)
+                            DrawBrushGizmo(rectStartTile.Value 
+                                + new int3(
+                                    tileMousePosition.x > rectStartTile.Value.x ? x : -x, 
+                                    0,
+                                    tileMousePosition.z > rectStartTile.Value.z ? z : -z), brushSize, activeLayer);
+                }
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                 {
-                    if(e.type == EventType.MouseDown)
+                    if (e.type == EventType.MouseDown)
                         DrawTiles(sceneView, e, tileMousePosition, true);
                     else
                         DrawTiles(sceneView, e, tileMousePosition, false);
                 }
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
                     EraseTiles(sceneView, e, tileMousePosition);
+                else if( e.type == EventType.MouseDown && (e.button == 0 || e.button == 1) && e.modifiers == EventModifiers.Shift)
+                {
+                    rectStartTile = tileMousePosition;
+                    GUIUtility.hotControl = 0;
+                    e.Use();
+                }
+                else if(e.type == EventType.MouseDrag && (e.button == 0 || e.button == 1) && rectStartTile != null && e.modifiers == EventModifiers.Shift)
+                {
+                    GUIUtility.hotControl = 0;
+                    e.Use();
+                }
+                else if( (e.type == EventType.MouseUp) && (e.button == 0 || e.button == 1) && rectStartTile != null)
+                {
+                    GUIUtility.hotControl = 0;
+                    e.Use();
+                    if (e.button == 0) DrawMultipleTiles(rectStartTile.Value, tileMousePosition, selectedTile, activeLayer);
+                    else if (e.button == 1) EraseMultipleTiles(rectStartTile.Value, tileMousePosition);
+                    rectStartTile = null;
+                }
             }
+        }
+
+        void DrawBrushGizmo(int3 brushPosition, int3 brushSize, TileAtlas.TagLayer activeLayer)
+        {
+            Handles.DrawWireCube(
+                t.TilePositionToLocalPosition(brushPosition, brushSize, activeLayer) + Vector3.up * brushSize.y * 0.5f * activeLayer.rasterSize.y, 
+                new Vector3(brushSize.x * activeLayer.rasterSize.x, brushSize.y * activeLayer.rasterSize.y, brushSize.z * activeLayer.rasterSize.z));
         }
 
         void OnScreenUI(SceneView sceneView)
@@ -298,7 +340,8 @@ namespace elZach.LevelEditor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical();
             Color guiColor = GUI.color;
-            if(GUILayout.Button("Unsorted", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.defaultLayer ? 60 : 30)))
+            //EditorGUIUtility.IconContent("Settings") 
+            if (GUILayout.Button("Ξ", GUILayout.Width(18), GUILayout.Height(activeLayer == atlas.defaultLayer ? 60 : 30)))
                 layerIndex = -1;
             for (int i = 0; i < atlas.layers.Count; i++)
             {
@@ -594,12 +637,44 @@ namespace elZach.LevelEditor
             t.PlaceTile(selectedTileGuid, tilePosition, layerIndex, t.tileSet.layers[layerIndex]);
         }
 
+        void DrawMultipleTiles(int3 startPosition, int3 endPosition, TileObject tile, TileAtlas.TagLayer layer)
+        {
+            int3 brushSize = tile.GetSize(layer.rasterSize);
+            int3 minPosition = math.min(startPosition, endPosition);
+            int3 maxPosition = math.max(startPosition, endPosition);
+            int widthX = Mathf.FloorToInt((maxPosition.x - minPosition.x) / brushSize.x);
+            int widthZ = Mathf.FloorToInt((maxPosition.z - minPosition.z) / brushSize.z);
+            for (int x = 0; x <= widthX; x++)
+                for (int z = 0; z <= widthZ; z++)
+                    t.PlaceTile(tile.guid,
+                        minPosition + new int3(
+                            x*brushSize.x,
+                            0,
+                            z*brushSize.z),
+                        layerIndex, layer, true); // <-- turn to false if performance becomes problematic
+
+            //t.UpdateMultiple(minPosition - new int3(1, 0, 1), maxPosition + new int3(2,0,2), layerIndex);
+        }
+
         void EraseTiles(SceneView view, Event e, int3 tilePosition)
         {
             if (layerIndex == -1) return;
             GUIUtility.hotControl = 0;
             t.RemoveTile(tilePosition, layerIndex);
             e.Use();
+        }
+
+        void EraseMultipleTiles(int3 startPosition, int3 endPosition)
+        {
+            //int3 brushSize = tile.GetSize(layer.rasterSize);
+            int3 minPosition = math.min(startPosition, endPosition);
+            int3 maxPosition = math.max(startPosition, endPosition);
+            int widthX = Mathf.FloorToInt((maxPosition.x - minPosition.x));
+            int widthZ = Mathf.FloorToInt((maxPosition.z - minPosition.z));
+            for (int x = 0; x <= widthX; x++)
+                for (int z = 0; z <= widthZ; z++)
+                    t.RemoveTile(minPosition + new int3(x, 0, z), layerIndex);
+
         }
 
         bool CheckForRequirements()

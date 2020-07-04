@@ -36,7 +36,7 @@ namespace elZach.LevelEditor
         public List<TileBehaviourBase> behaviours = new List<TileBehaviourBase>();
         [Header("Size")]
         public Vector3 boundSize = Vector3.one;
-        public bool roundUp = false;
+        public bool roundUp = true;
         [Button("Calc Bounds")]
         public void CalcBounds()
         {
