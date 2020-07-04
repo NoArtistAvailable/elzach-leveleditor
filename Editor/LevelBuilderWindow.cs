@@ -181,7 +181,7 @@ namespace elZach.LevelEditor
                 }
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                 {
-                    if (!tileMousePosition.Equals(lastTileMousePos))
+                    if (!tileMousePosition.Equals(lastTileMousePos) || e.type == EventType.MouseDown)
                         DrawTiles(sceneView, e, tileMousePosition, true);
                     else
                         DrawTiles(sceneView, e, tileMousePosition, false);
