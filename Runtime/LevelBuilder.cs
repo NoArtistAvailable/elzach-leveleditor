@@ -96,7 +96,7 @@ namespace elZach.LevelEditor
 
 #if UNITY_EDITOR
 
-        public void PlaceTile(string guid, int3 position, int layerIndex)
+        public void PlaceTile(string guid, int3 position, int layerIndex, TileAtlas.TagLayer tagLayer)
         {
             TileObject atlasTile;
             tileSet.TileFromGuid.TryGetValue(guid, out atlasTile);
@@ -107,9 +107,10 @@ namespace elZach.LevelEditor
                 for (int i = 0; i <= layerIndex - layers.Count; i++)
                     layers.Add(new SerializableDictionary<int3, PlacedTile>());
 
-            for (int x = 0; x < atlasTile.size.x; x++)
-                for (int y = 0; y < atlasTile.size.y; y++)
-                    for (int z = 0; z < atlasTile.size.z; z++)
+            int3 tileSize = atlasTile.GetSize(tagLayer.rasterSize);
+            for (int x = 0; x < tileSize.x; x++)
+                for (int y = 0; y < tileSize.y; y++)
+                    for (int z = 0; z < tileSize.z; z++)
                     {
                         PlacedTile alreadyPlaced;
                         if (layers[layerIndex].TryGetValue(position + new int3(x, y, z), out alreadyPlaced))
@@ -122,11 +123,11 @@ namespace elZach.LevelEditor
 
             //atlasTile.size
 
-            go.transform.localPosition = TilePositionToLocalPosition(position, atlasTile.size, tileSet.layers[layerIndex]);
-            var placedTile = new PlacedTile(guid, position, atlasTile, go);
-            for (int x = 0; x < atlasTile.size.x; x++)
-                for (int y = 0; y < atlasTile.size.y; y++)
-                    for (int z = 0; z < atlasTile.size.z; z++)
+            go.transform.localPosition = TilePositionToLocalPosition(position, tileSize, tileSet.layers[layerIndex]);
+            var placedTile = new PlacedTile(guid, position, atlasTile, go, tagLayer);
+            for (int x = 0; x < tileSize.x; x++)
+                for (int y = 0; y < tileSize.y; y++)
+                    for (int z = 0; z < tileSize.z; z++)
                         layers[layerIndex].Add(position + new int3(x, y, z), placedTile);
             var neighbs = GetNeighbours(placedTile, layerIndex);
             if (atlasTile.behaviour) atlasTile.behaviour.OnPlacement(placedTile, neighbs);
@@ -147,9 +148,10 @@ namespace elZach.LevelEditor
         public void RemoveTile(PlacedTile target, int layerIndex)
         {
             DestroyImmediate(target.placedObject);
-            for (int x2 = 0; x2 < target.tileObject.size.x; x2++)
-                for (int y2 = 0; y2 < target.tileObject.size.y; y2++)
-                    for (int z2 = 0; z2 < target.tileObject.size.z; z2++)
+            int3 tileSize = target.tileObject.GetSize(target.layer.rasterSize);
+            for (int x2 = 0; x2 < tileSize.x; x2++)
+                for (int y2 = 0; y2 < tileSize.y; y2++)
+                    for (int z2 = 0; z2 < tileSize.z; z2++)
                     {
                         layers[layerIndex].Remove(target.position + new int3(x2, y2, z2));
                     }

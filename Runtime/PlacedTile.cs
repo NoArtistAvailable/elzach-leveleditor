@@ -12,12 +12,14 @@ namespace elZach.LevelEditor
         public int3 position;
         public TileObject tileObject;
         public GameObject placedObject;
-        public PlacedTile(string guid, int3 position, TileObject tileObject, GameObject placedObject)
+        public TileAtlas.TagLayer layer;
+        public PlacedTile(string guid, int3 position, TileObject tileObject, GameObject placedObject, TileAtlas.TagLayer layer)
         {
             this.guid = guid;
             this.position = position;
             this.tileObject = tileObject;
             this.placedObject = placedObject;
+            this.layer = layer;
         }
     }
 }

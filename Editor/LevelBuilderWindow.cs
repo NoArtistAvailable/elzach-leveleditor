@@ -150,8 +150,8 @@ namespace elZach.LevelEditor
                 }
                 //Handles.DrawWireDisc(t.TilePositionToLocalPosition(tileMousePosition, selectedTile.size), Vector3.up, 0.5f * selectedTile.size.x);
                 Handles.color = activeLayer.color + Color.gray;
-                int3 brushSize = selectedTile ? selectedTile.size : new int3(1, 1, 1);
-                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, activeLayer) + Vector3.up * brushSize.y * 0.5f, new Vector3(brushSize.x, brushSize.y, brushSize.z));
+                int3 brushSize = selectedTile ? selectedTile.GetSize(activeLayer.rasterSize) : new int3(1, 1, 1);
+                Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, activeLayer) + Vector3.up * brushSize.y * 0.5f * activeLayer.rasterSize.y, new Vector3(brushSize.x * activeLayer.rasterSize.x, brushSize.y * activeLayer.rasterSize.y, brushSize.z * activeLayer.rasterSize.z));
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
                     DrawTiles(sceneView, e, tileMousePosition);
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
@@ -514,7 +514,7 @@ namespace elZach.LevelEditor
         {
             if (layerIndex == -1) return;
             GUIUtility.hotControl = 0;
-            t.PlaceTile(selectedTileGuid, tilePosition, layerIndex);
+            t.PlaceTile(selectedTileGuid, tilePosition, layerIndex, t.tileSet.layers[layerIndex]);
             e.Use();
         }
 

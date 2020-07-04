@@ -36,8 +36,6 @@ namespace elZach.LevelEditor
         public TileBehaviourBase behaviour;
         [Header("Not In Use yet")]
         public Vector3 boundSize = Vector3.one;
-        [Header("Will be generated in future")]
-        public int3 size = new int3(1, 1, 1);
         
         [Button("Calc Bounds")]
         public void CalcBounds()
@@ -56,18 +54,25 @@ namespace elZach.LevelEditor
             }
 
             Vector3 newSize = bounds.max - prefabs[0].transform.position;
-            newSize.x *= 2f;
+            newSize.x *= 2f; // this is because our basic 1,1,1 tile is centered on x,z but on the bottom for y so a extent of 0.5,1,0.5 := 1,1,1 cube
             newSize.z *= 2f;
             boundSize = newSize;
         }
 
-        public int3 GetSize(Vector3 rasterScale)
+        public int3 GetSize(Vector3 rasterScale, bool toCeil = false)
         {
-            return new int3(
-                Mathf.Max(1, Mathf.FloorToInt(boundSize.x / rasterScale.x)),
-                Mathf.Max(1, Mathf.FloorToInt(boundSize.y / rasterScale.y)),
-                Mathf.Max(1, Mathf.FloorToInt(boundSize.z / rasterScale.z))
-                );
+            if(toCeil)
+                return new int3(
+                    Mathf.Max(1, Mathf.CeilToInt(boundSize.x / rasterScale.x)),
+                    Mathf.Max(1, Mathf.CeilToInt(boundSize.y / rasterScale.y)),
+                    Mathf.Max(1, Mathf.CeilToInt(boundSize.z / rasterScale.z))
+                    );
+            else
+                return new int3(
+                    Mathf.Max(1, Mathf.FloorToInt(boundSize.x / rasterScale.x)),
+                    Mathf.Max(1, Mathf.FloorToInt(boundSize.y / rasterScale.y)),
+                    Mathf.Max(1, Mathf.FloorToInt(boundSize.z / rasterScale.z))
+                    );
         }
 
         //[Reorderable]
