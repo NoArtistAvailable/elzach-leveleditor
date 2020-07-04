@@ -94,13 +94,22 @@ namespace elZach.LevelEditor
             return neighbs.ToArray();
         }
 
+        public PlacedTile GetTile(int3 pos, int layerIndex)
+        {
+            layers[layerIndex].TryGetValue(pos, out var foundTile);
+            return foundTile;
+        }
+
 #if UNITY_EDITOR
 
         public void PlaceTile(string guid, int3 position, int layerIndex, TileAtlas.TagLayer tagLayer)
         {
+
+            Undo.RegisterCompleteObjectUndo(this, "Created New Tile Object");
             TileObject atlasTile;
             tileSet.TileFromGuid.TryGetValue(guid, out atlasTile);
             var go = (GameObject)PrefabUtility.InstantiatePrefab(atlasTile.prefab) as GameObject;
+            
             if (!go) { Debug.LogError("No GameObject found at Tile with guid " + guid); return; }
 
             if (layerIndex >= layers.Count)
@@ -133,6 +142,8 @@ namespace elZach.LevelEditor
             atlasTile.PlaceBehaviour(placedTile, neighbs);
             foreach (var neighb in neighbs)
                 neighb.tileObject.UpdateBehaviour(neighb, GetNeighbours(neighb, layerIndex));
+
+            Undo.RegisterCreatedObjectUndo(go, "Created New Tile Object");
             EditorUtility.SetDirty(gameObject);
         }
 
@@ -147,7 +158,10 @@ namespace elZach.LevelEditor
 
         public void RemoveTile(PlacedTile target, int layerIndex)
         {
-            DestroyImmediate(target.placedObject);
+            Undo.RegisterCompleteObjectUndo(this, "Before Removed TileObject");
+            if (target.placedObject) Undo.DestroyObjectImmediate(target.placedObject);
+            
+            //DestroyImmediate(target.placedObject);
             int3 tileSize = target.tileObject.GetSize(target.layer.rasterSize);
             for (int x2 = 0; x2 < tileSize.x; x2++)
                 for (int y2 = 0; y2 < tileSize.y; y2++)
@@ -159,13 +173,17 @@ namespace elZach.LevelEditor
 
         public void RemovePlacedTiles(TileObject tile, int layerIndex)
         {
+            Undo.RegisterCompleteObjectUndo(this, "Before RemovedPlaced Tiles");
             List<int3> keysToRemove = new List<int3>();
             foreach (var kvp in layers[layerIndex])
             {
                 if (kvp.Value.tileObject == tile)
                 {
-                    if(kvp.Value.placedObject)
+                    if (kvp.Value.placedObject)
+                    {
+                        Undo.DestroyObjectImmediate(kvp.Value.placedObject);
                         DestroyImmediate(kvp.Value.placedObject);
+                    }
                     keysToRemove.Add(kvp.Key);
                 }
             }
@@ -175,11 +193,16 @@ namespace elZach.LevelEditor
 
         public void ClearLevel()
         {
+            Undo.RegisterCompleteObjectUndo(this, "Before Clearing Level");
             foreach (var layer in layers)
             {
                 foreach (var tile in layer.Values)
                 {
-                    DestroyImmediate(tile.placedObject);
+                    if (tile.placedObject)
+                    {
+                        Undo.DestroyObjectImmediate(tile.placedObject);
+                        DestroyImmediate(tile.placedObject);
+                    }
                 }
                 layer.Clear();
             }

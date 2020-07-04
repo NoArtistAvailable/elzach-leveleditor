@@ -152,7 +152,12 @@ namespace elZach.LevelEditor
                 int3 brushSize = selectedTile ? selectedTile.GetSize(activeLayer.rasterSize) : new int3(1, 1, 1);
                 Handles.DrawWireCube(t.TilePositionToLocalPosition(tileMousePosition, brushSize, activeLayer) + Vector3.up * brushSize.y * 0.5f * activeLayer.rasterSize.y, new Vector3(brushSize.x * activeLayer.rasterSize.x, brushSize.y * activeLayer.rasterSize.y, brushSize.z * activeLayer.rasterSize.z));
                 if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
-                    DrawTiles(sceneView, e, tileMousePosition);
+                {
+                    if(e.type == EventType.MouseDown)
+                        DrawTiles(sceneView, e, tileMousePosition, true);
+                    else
+                        DrawTiles(sceneView, e, tileMousePosition, false);
+                }
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
                     EraseTiles(sceneView, e, tileMousePosition);
             }
@@ -552,12 +557,18 @@ namespace elZach.LevelEditor
             atlas.layers[i2].layerObjects.Add(buttonTileObject);
         }
 
-        private void DrawTiles(SceneView view, Event e, int3 tilePosition)
+        private void DrawTiles(SceneView view, Event e, int3 tilePosition, bool replaceSame = false)
         {
+            
             if (layerIndex == -1) return;
             GUIUtility.hotControl = 0;
-            t.PlaceTile(selectedTileGuid, tilePosition, layerIndex, t.tileSet.layers[layerIndex]);
             e.Use();
+            if (!replaceSame)
+                if (t.GetTile(tilePosition, layerIndex)?.guid == selectedTileGuid)
+                {
+                    return;
+                }
+            t.PlaceTile(selectedTileGuid, tilePosition, layerIndex, t.tileSet.layers[layerIndex]);
         }
 
         void EraseTiles(SceneView view, Event e, int3 tilePosition)
