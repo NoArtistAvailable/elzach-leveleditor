@@ -59,6 +59,7 @@ namespace elZach.LevelEditor
 
         public enum RasterVisibility { None, WhenPainting, Always }
         public RasterVisibility rasterVisibility = RasterVisibility.WhenPainting;
+        Color rasterColor = new Color(0f, 0.5f, 0.8f, 0.3f);
 
         private void OnGUI()
         {
@@ -88,13 +89,14 @@ namespace elZach.LevelEditor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel("Grid Visibility ");
             rasterVisibility = (RasterVisibility) EditorGUILayout.EnumPopup(rasterVisibility);
+            rasterColor = EditorGUILayout.ColorField(rasterColor);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             targetHeigth = EditorGUILayout.IntField("Heigth: ", targetHeigth);
             // activeLayer = EditorGUILayout.IntField("Layer:", activeLayer);
             EditorGUILayout.EndHorizontal();
             Event e = Event.current;
-            if (e.type == EventType.DragUpdated)
+            if (e.type == EventType.DragUpdated || e.type == EventType.DragPerform)
             {
                 Rect myRect = GUILayoutUtility.GetRect(100, 40, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 GUI.Box(myRect, "Drag and Drop Prefabs to this Box!");
@@ -103,19 +105,27 @@ namespace elZach.LevelEditor
                     if (e.type == EventType.DragUpdated)
                     {
                         DragAndDrop.visualMode = DragAndDropVisualMode.Move;
-                        //Debug.Log("Drag Updated!");
-                        e.Use();
                     }
-                    else if (e.type == EventType.DragPerform)
+                    if (e.type == EventType.DragPerform)
                     {
-                        DragAndDrop.AcceptDrag();
-                        Debug.Log("Drag Perform!");
-                        Debug.Log(DragAndDrop.objectReferences.Length);
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                        //Debug.Log(DragAndDrop.objectReferences.Length);
                         for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
                         {
-                            t.tileSet.tiles.Add(DragAndDrop.objectReferences[i] as TileObject);
-                            t.tileSet.GetDictionaryFromList();
+                            var draggedTile = DragAndDrop.objectReferences[i] as TileObject;
+                            if (!draggedTile)
+                            {
+                                var draggedGameObject = DragAndDrop.objectReferences[i] as GameObject;
+                                draggedTile = TileObject.CreateNewTileFileFromPrefabs(draggedGameObject);
+                            }
+                            t.tileSet.tiles.Add(draggedTile);
+                            if (layerIndex != -1)
+                            {
+                                t.tileSet.layers[layerIndex].layerObjects.Add(draggedTile);
+                            }
                         }
+                        t.tileSet.GetDictionaryFromList();
+                        DragAndDrop.AcceptDrag();
                         e.Use();
                     }
                 }
@@ -222,7 +232,7 @@ namespace elZach.LevelEditor
             if (rasterVisibility == RasterVisibility.Always || (rasterVisibility == RasterVisibility.WhenPainting && painting))
             {
                 Handles.matrix = t.transform.localToWorldMatrix;
-                Handles.color = new Color(0f, 0.5f, 0.8f, 0.15f);
+                Handles.color = rasterColor;
                 float zOffset = rasterSize.z * floorSize.z * 0.5f;
                 for (int x = -Mathf.FloorToInt(floorSize.x / 2); x < Mathf.CeilToInt(floorSize.x / 2); x++)
                 {

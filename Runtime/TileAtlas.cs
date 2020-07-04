@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
+using System.Linq;
 
 namespace elZach.LevelEditor
 {
@@ -51,6 +52,7 @@ namespace elZach.LevelEditor
             TileFromGuid.Clear();
             foreach(var tile in tiles)
             {
+                if (!tile) continue;
                 if (TileFromGuid.ContainsKey(tile.guid))
                 {
                     Debug.LogWarning("Guid already exists in Dictionary, make sure that each tile has a unique ID. Removed Tile: " + tile.name + " from atlas " + this.name);
@@ -58,6 +60,11 @@ namespace elZach.LevelEditor
                     return;
                 }
                 TileFromGuid.Add(tile.guid, tile);
+            }
+            if (tiles.Contains(null))
+            {
+                for (int i = tiles.Count - 1; i >= 0; i--)
+                    if (tiles[i] == null) tiles.RemoveAt(i);
             }
             UnityEditor.EditorUtility.SetDirty(this);
         }
