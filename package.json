@@ -6,7 +6,7 @@
     "email": "dont@message.me",
     "url": "-"
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "unity": "2020.2",
   "unityRelease": "0a15",
   "displayName": "elZach LevelEditor",
@@ -18,7 +18,7 @@
     "url": "https://github.com/NoArtistAvailable/elzach-leveleditor.git"
   },
   "dependencies": {
-    "elzach.extensions": "0.0.1",
+    "elzach.extensions": "0.0.2",
     "com.unity.mathematics": "1.1.0"
   },
   "hideInEditor": false,
