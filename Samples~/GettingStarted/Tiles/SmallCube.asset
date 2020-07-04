@@ -17,5 +17,7 @@ MonoBehaviour:
   guid: 6f6811c0-22f8-4565-8487-21ed077e093d
   behaviours:
   - {fileID: 11400000, guid: 3d439b28c181aa84b89f1d9bab77a21e, type: 2}
+  - {fileID: 11400000, guid: 0d41ece94cf00ec48ae1dd08592f060f, type: 2}
+  - {fileID: 11400000, guid: 1e3099d4179afb04380aa276660bc521, type: 2}
   boundSize: {x: 1, y: 1, z: 1}
   variants: []

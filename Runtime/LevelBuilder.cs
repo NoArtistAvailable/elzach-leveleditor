@@ -143,7 +143,7 @@ namespace elZach.LevelEditor
             foreach (var neighb in neighbs)
                 neighb.tileObject.UpdateBehaviour(neighb, GetNeighbours(neighb, layerIndex));
 
-            Undo.RegisterCreatedObjectUndo(go, "Created New Tile Object");
+            Undo.RegisterCreatedObjectUndo(placedTile.placedObject, "Created New Tile Object");
             EditorUtility.SetDirty(gameObject);
         }
 
