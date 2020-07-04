@@ -115,13 +115,13 @@ namespace elZach.LevelEditor
             UnityEditor.EditorUtility.SetDirty(this);
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Create Tile From Prefab",true)]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile From Prefab",true)]
         static bool CreateFromPrefabValidate()
         {
             bool valid = UnityEditor.Selection.activeObject is GameObject;
             return valid;
         }
-        [UnityEditor.MenuItem("Assets/Tiles/Create Tile From Prefab")]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile From Prefab")]
         static List<TileObject> CreateFromPrefab()
         {
             List<TileObject> newTiles = new List<TileObject>();
@@ -132,7 +132,7 @@ namespace elZach.LevelEditor
             return newTiles;
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Create Tile and add to Current Atlas", true)]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile and add to Current Atlas", true)]
         static bool ValidateCreateAndAddToAtlas()
         {
             bool valid = UnityEditor.Selection.activeObject is GameObject;
@@ -142,7 +142,7 @@ namespace elZach.LevelEditor
             return valid;
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Create Tile and add to Current Atlas")]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile and add to Current Atlas")]
         static void CreateAndAddToAtlas()
         {
             var builder = FindObjectOfType<LevelBuilder>();
@@ -157,7 +157,7 @@ namespace elZach.LevelEditor
             builder.tileSet.GetDictionaryFromList();
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Create Tile and add multiple GameObjects", true)]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile and add multiple GameObjects", true)]
         static bool ValidateCreateMultipleGOTile()
         {
             bool valid = UnityEditor.Selection.activeObject is GameObject;
@@ -165,13 +165,13 @@ namespace elZach.LevelEditor
             return valid;
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Create Tile and add multiple GameObjects")]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile and add multiple GameObjects")]
         static void CreateMultipleGOTile()
         {
             CreateNewTileFileFromPrefabs(UnityEditor.Selection.gameObjects);
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Add Tile To Current Atlas", true)]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Add Tile To Current Atlas", true)]
         static bool ValidateAddTileToCurrentAtlas()
         {
             bool valid = UnityEditor.Selection.activeObject is TileObject;
@@ -181,7 +181,7 @@ namespace elZach.LevelEditor
             return valid;
         }
 
-        [UnityEditor.MenuItem("Assets/Tiles/Add Tile To Current Atlas")]
+        [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Add Tile To Current Atlas")]
         static void AddTileToCurrentAtlas()
         {
             var builder = FindObjectOfType<LevelBuilder>();

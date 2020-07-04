@@ -347,7 +347,7 @@ namespace elZach.LevelEditor
                     if (!atlasTile) { continue; }
                     Texture2D texture = null;
                     if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Prefabs"));
+                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
                 }
                 if (paletteIcons.Count == 0) EditorGUILayout.HelpBox("No unsorted tiles in atlas",MessageType.Info);
             }
@@ -358,7 +358,7 @@ namespace elZach.LevelEditor
                     if (!atlasTile) continue;
                     Texture2D texture = null;
                     if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Prefabs"));
+                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
                 }
 
             if (activeLayer != atlas.defaultLayer) paletteIcons.Add(EditorGUIUtility.IconContent("Toolbar Plus"));
