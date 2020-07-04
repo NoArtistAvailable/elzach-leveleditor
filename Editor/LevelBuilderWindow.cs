@@ -120,7 +120,6 @@ namespace elZach.LevelEditor
                     }
                 }
             }
-
             DrawPalette(t.tileSet, Event.current);
             if (GUILayout.Button("Select Atlas")) Selection.activeObject = t.tileSet;
             if(GUILayout.Button("Clear Level"))t.ClearLevel(); 
@@ -315,9 +314,9 @@ namespace elZach.LevelEditor
                 if (!changedBefore && GUI.changed) UnityEditor.EditorUtility.SetDirty(atlas);
             }
             else
-                EditorGUILayout.LabelField(activeLayer.name);
+                EditorGUILayout.HelpBox("Unsorted objects, rightclick and move to a layer to use.", MessageType.Info,true);
 
-            if (layerIndex < atlas.layers.Count)
+            if (layerIndex >= 0 && layerIndex < atlas.layers.Count)
             {
                 //activeLayer.rasterSize = EditorGUILayout.Vector3Field("raster ", activeLayer.rasterSize);
                 bool changedBefore = GUI.changed;
@@ -330,7 +329,7 @@ namespace elZach.LevelEditor
                 if (!changedBefore && GUI.changed) t.UpdateTilePositionsOnLayer(activeLayer, layerIndex);
             }
 
-            if (activeLayer!= atlas.defaultLayer && activeLayer.layerObjects.Count == 0) { EditorGUILayout.LabelField("Drag and Drop Tiles here."); return; }
+            if (activeLayer!= atlas.defaultLayer && activeLayer.layerObjects.Count == 0) { EditorGUILayout.HelpBox("Drag and Drop Tiles here.", MessageType.Info, true); return; }
 
             //-----
             paletteScroll = EditorGUILayout.BeginScrollView(paletteScroll);
@@ -339,19 +338,11 @@ namespace elZach.LevelEditor
             {
                 foreach (var atlasTile in atlas.TileFromGuid.Values)
                 {
-                    TileAtlas.TagLayer tileLayer = null;
-                    foreach(var layer in atlas.layers)
-                        if (layer.layerObjects.Contains(atlasTile))
-                        {
-                            tileLayer = layer;
-                            break;
-                        }
-
-                    //if (tileLayer != null) continue;
                     // Get a preview for the prefab
-                    if (!atlasTile) continue;
-                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                    paletteIcons.Add(new GUIContent(texture));
+                    if (!atlasTile) { continue; }
+                    Texture2D texture = null;
+                    if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
+                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Prefabs"));
                 }
                 if (paletteIcons.Count == 0) EditorGUILayout.HelpBox("No unsorted tiles in atlas",MessageType.Info);
             }
@@ -360,17 +351,17 @@ namespace elZach.LevelEditor
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) continue;
-                    Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                    paletteIcons.Add(new GUIContent(texture));
+                    Texture2D texture = null;
+                    if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
+                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Prefabs"));
                 }
 
             if (activeLayer != atlas.defaultLayer) paletteIcons.Add(EditorGUIUtility.IconContent("Toolbar Plus"));
             // Display the grid
-
+            
             //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
             float columnCount = 4f;
             EditorGUILayout.BeginHorizontal();
-            
             for(int i=0; i < paletteIcons.Count; i++)
             {
                 Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width((position.width - 60) / columnCount));
@@ -395,6 +386,15 @@ namespace elZach.LevelEditor
                             break;
                     }
                 }
+                TileAtlas.TagLayer tileLayer = null;
+                foreach (var layer in atlas.layers)
+                    if (layer.layerObjects.Contains(buttonTileObject))
+                    {
+                        tileLayer = layer;
+                        break;
+                    }
+
+                GUI.backgroundColor = tileLayer!=null?tileLayer.color:guiColor;
                 GUI.Toggle(buttonRect, paletteIndex == i, paletteIcons[i], "Button");
                 if (clickHere)
                 {
@@ -417,13 +417,15 @@ namespace elZach.LevelEditor
                 }
             }
             EditorGUILayout.EndHorizontal();
-            if(activeLayer==atlas.defaultLayer)
+            
+            if (activeLayer==atlas.defaultLayer)
                 selectedTileGuid = atlas.tiles[paletteIndex].guid;
             else
                 selectedTileGuid = activeLayer.layerObjects[paletteIndex].guid;
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndHorizontal();
+            GUI.backgroundColor = guiColor;
         }
 
         Vector2 onScreenPaletteScroll;
@@ -439,7 +441,7 @@ namespace elZach.LevelEditor
             foreach (var atlasTile in activeLayer.layerObjects)
             {
                 // Get a preview for the prefab
-                if (!atlasTile) continue;
+                if (!atlasTile || atlasTile.prefabs.Length == 0) continue;
                 Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                 paletteIcons.Add(new GUIContent(texture));
             }
@@ -525,6 +527,10 @@ namespace elZach.LevelEditor
             menu.AddItem(new GUIContent("Delete all objects at " + index + ":" + atlas.layers[index].name), false, () => 
             {
                 t.ClearLayer(index);
+            });
+            menu.AddItem(new GUIContent("Change Layer Color"), false, () =>
+            {
+                atlas.layers[index].color = UnityEngine.Random.ColorHSV(0f, 1f, 0.5f, 0.5f, 0.6f, 0.8f);
             });
             menu.ShowAsContext();
             e.Use();
