@@ -6,7 +6,7 @@
     "email": "dont@message.me",
     "url": "-"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "unity": "2020.2",
   "unityRelease": "0a15",
   "displayName": "elZach LevelEditor",
