@@ -45,7 +45,7 @@ namespace elZach.LevelEditor
         bool[] _layerVis;
         bool[] layerVisibility { get
             {
-                if (_layerVis == null) _layerVis = new bool[t.layers.Count];
+                if (_layerVis == null) _layerVis = new bool[t ? t.layers.Count : 0];
                 if (t.layers.Count > _layerVis.Length)
                 {
                     bool[] biggerBoolArray = new bool[t.layers.Count];
@@ -62,11 +62,11 @@ namespace elZach.LevelEditor
         {
             get
             {
-                if (_paletteVis == null) _paletteVis = new bool[t.layers.Count];
-                if (t.layers.Count > _layerVis.Length)
+                if (_paletteVis == null) _paletteVis = new bool[0];
+                if (t && t.layers.Count > 0 && t.layers.Count > _paletteVis.Length)
                 {
                     bool[] biggerBoolArray = new bool[t.layers.Count];
-                    for (int i = 0; i < _layerVis.Length; i++)
+                    for (int i = 0; i < _paletteVis.Length; i++)
                         biggerBoolArray[i] = _paletteVis[i];
                     _paletteVis = biggerBoolArray;
                 }
@@ -258,6 +258,8 @@ namespace elZach.LevelEditor
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
+            GUIStyle layerButtonStyle = new GUIStyle("Button");
+            layerButtonStyle.alignment = TextAnchor.MiddleLeft;
             Color guiColor = GUI.backgroundColor;
             for (int i = 0; i < Mathf.Min(t.layers.Count,t.tileSet.layers.Count); i++)
             {
@@ -271,7 +273,7 @@ namespace elZach.LevelEditor
                     paletteVisibility[i] = paletteVis;
                 }
 
-                if (GUILayout.Button((i+":"+t.tileSet.layers[i].name), "Button", GUILayout.Width(80)))
+                if (GUILayout.Button((i+":"+t.tileSet.layers[i].name), layerButtonStyle, GUILayout.Width(80)))
                 {
                     layerIndex = i;
                     Repaint();
@@ -451,7 +453,7 @@ namespace elZach.LevelEditor
             //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
             float columnCount = 4f;
             EditorGUILayout.BeginHorizontal();
-            GUIStyle iconLabel = "Label";
+            GUIStyle iconLabel = new GUIStyle("Label");
             iconLabel.alignment = TextAnchor.UpperCenter;
             iconLabel.normal.textColor = Color.white;
             for(int i=0; i < paletteIcons.Count; i++)
