@@ -15,6 +15,8 @@ namespace elZach.LevelEditor
         [Header("Setup")]
         public TileAtlas tileSet;
         public Vector3 floorBoundaries = new Vector3(20, 5, 20);
+        [HideInInspector]
+        public List<SerializableDictionary<int3, PlacedTile>> layers = new  List<SerializableDictionary<int3, PlacedTile>>();
 
         public int3 FloorSize(TileAtlas.TagLayer layer)
         {
@@ -32,8 +34,6 @@ namespace elZach.LevelEditor
                 floorSize.z * layer.rasterSize.z
                 );
         }
-
-        public List<SerializableDictionary<int3, PlacedTile>> layers = new  List<SerializableDictionary<int3, PlacedTile>>();
 
         public bool TilePositionInFloorSize(int3 tilePos, TileAtlas.TagLayer layer)
         {

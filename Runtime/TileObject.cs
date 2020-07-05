@@ -32,6 +32,7 @@ namespace elZach.LevelEditor
 
         public GameObject prefab { get { return prefabs[UnityEngine.Random.Range(0, prefabs.Length)]; } }
         public GameObject[] prefabs;
+        [HideInInspector]
         public string guid = System.Guid.NewGuid().ToString();
         public List<TileBehaviourBase> behaviours = new List<TileBehaviourBase>();
         [Header("Size")]

@@ -9,7 +9,7 @@ namespace elZach.LevelEditor
     public class LevelBuilderWindow : EditorWindow
     {
         [MenuItem("Window/LevelBuilder")]
-        static void Init()
+        public static void Init()
         {
             LevelBuilderWindow window = (LevelBuilderWindow)EditorWindow.GetWindow(typeof(LevelBuilderWindow));
             window.titleContent = new GUIContent("Level Builder");
@@ -56,6 +56,24 @@ namespace elZach.LevelEditor
                 return _layerVis;
             }
         }
+
+        bool[] _paletteVis;
+        bool[] paletteVisibility
+        {
+            get
+            {
+                if (_paletteVis == null) _paletteVis = new bool[t.layers.Count];
+                if (t.layers.Count > _layerVis.Length)
+                {
+                    bool[] biggerBoolArray = new bool[t.layers.Count];
+                    for (int i = 0; i < _layerVis.Length; i++)
+                        biggerBoolArray[i] = _paletteVis[i];
+                    _paletteVis = biggerBoolArray;
+                }
+                return _paletteVis;
+            }
+        }
+
 
         public enum RasterVisibility { None, WhenPainting, Always }
         public RasterVisibility rasterVisibility = RasterVisibility.WhenPainting;
@@ -226,6 +244,7 @@ namespace elZach.LevelEditor
             if (!painting) return;
             Handles.BeginGUI();
             var icon_eye = EditorGUIUtility.IconContent("VisibilityOn");
+            var icon_palette = EditorGUIUtility.IconContent("Collab.Build");
 
             GUILayout.BeginHorizontal();
 
@@ -244,7 +263,15 @@ namespace elZach.LevelEditor
             {
                 GUILayout.BeginHorizontal();
                 GUI.backgroundColor = t.tileSet.layers[i].color + (i == layerIndex ? Color.gray : Color.clear);
-                if(GUILayout.Button((i+":"+t.tileSet.layers[i].name), "Button", GUILayout.Width(100)))
+
+                bool paletteVis = paletteVisibility[i];
+                paletteVis = GUILayout.Toggle(paletteVis, icon_palette, "Button", GUILayout.Width(22), GUILayout.Height(19));
+                if (paletteVis != paletteVisibility[i])
+                {
+                    paletteVisibility[i] = paletteVis;
+                }
+
+                if (GUILayout.Button((i+":"+t.tileSet.layers[i].name), "Button", GUILayout.Width(80)))
                 {
                     layerIndex = i;
                     Repaint();
@@ -505,22 +532,88 @@ namespace elZach.LevelEditor
         void DrawOnScreenPalette()
         {
             bool guiChangedBefore = GUI.changed;
-            TileAtlas.TagLayer activeLayer = layerIndex == -1 ? t.tileSet.defaultLayer : (layerIndex < t.tileSet.layers.Count) ? t.tileSet.layers[layerIndex] : t.tileSet.defaultLayer;
-            if (activeLayer == t.tileSet.defaultLayer) return;
+            TileAtlas atlas = t.tileSet;
+            TileAtlas.TagLayer activeLayer = layerIndex == -1 ? atlas.defaultLayer : (layerIndex < atlas.layers.Count) ? atlas.layers[layerIndex] : atlas.defaultLayer;
+            if (activeLayer == atlas.defaultLayer) return;
 
-            onScreenPaletteScroll = EditorGUILayout.BeginScrollView(onScreenPaletteScroll);
+            float scrollBarSize = GUI.skin.verticalScrollbar.fixedWidth;
+            ChangeVerticalScrollbar(6);
+
+            onScreenPaletteScroll = EditorGUILayout.BeginScrollView(onScreenPaletteScroll,GUILayout.Width(52));
             List<GUIContent> paletteIcons = new List<GUIContent>();
 
-            foreach (var atlasTile in activeLayer.layerObjects)
+            for (int i = 0; i < atlas.layers.Count; i++)
             {
-                // Get a preview for the prefab
-                if (!atlasTile || atlasTile.prefabs.Length == 0) continue;
-                Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                paletteIcons.Add(new GUIContent(texture));
+                var layer = atlas.layers[i];
+                if(paletteVisibility[i] || layer == activeLayer)
+                    foreach (var atlasTile in layer.layerObjects)
+                    {
+                        // Get a preview for the prefab
+                        if (!atlasTile || atlasTile.prefabs.Length == 0) continue;
+                        Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
+                        paletteIcons.Add(new GUIContent(texture));
+                    }
             }
-            paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 1, "Button", GUILayout.Width(40), GUILayout.Height(paletteIcons.Count*40));
+            Rect screenPaletteBox = GUILayoutUtility.GetRect(40, paletteIcons.Count * 40, "CN Box");
+            int previousItems = 0;
+            Vector2 layerIndicatorSize = new Vector2(5, 40);
+            for (int i=0; i < atlas.layers.Count; i++)
+            {
+                if(paletteVisibility[i] || i == layerIndex)
+                {
+                    for (int j = 0; j < atlas.layers[i].layerObjects.Count; j++) {
+                        if(i==layerIndex && j == paletteIndex)
+                            EditorGUI.DrawRect(new Rect(screenPaletteBox.position + Vector2.up * previousItems * 40, layerIndicatorSize), atlas.layers[i].color + Color.gray);
+                        else
+                            EditorGUI.DrawRect(new Rect(screenPaletteBox.position + Vector2.up * previousItems * 40, layerIndicatorSize), atlas.layers[i].color);
+                        previousItems++;
+                    }
+                }
+            }
+            screenPaletteBox.position += Vector2.right * 5;
+            int gridIndex = GUI.SelectionGrid(screenPaletteBox, GetIndexFromPaletteIndex(paletteIndex), paletteIcons.ToArray(), 1, "CN Box");
+            int layerIndexFromPalette;
             EditorGUILayout.EndScrollView();
-            if (!guiChangedBefore && GUI.changed) Repaint();
+            ChangeVerticalScrollbar(scrollBarSize);
+            if (!guiChangedBefore && GUI.changed)
+            {
+                paletteIndex = GetPaletteIndexFromIndex(gridIndex, out layerIndexFromPalette);
+                layerIndex = layerIndexFromPalette;
+                Repaint();
+            }
+
+            int GetPaletteIndexFromIndex(int i, out int newLayerIndex)
+            {
+                int indexInPalette = 0;
+                int itemsBefore = 0;
+                for(int layer =0; layer < paletteVisibility.Length; layer++)
+                {
+                    if (paletteVisibility[layer] || layer == layerIndex)
+                    {
+                        itemsBefore += atlas.layers[layer].layerObjects.Count;
+                        if (itemsBefore > i)
+                        {
+                            indexInPalette = i - (itemsBefore - atlas.layers[layer].layerObjects.Count);
+                            newLayerIndex = layer;
+                            //Debug.Log(newLayerIndex);
+                            return indexInPalette;
+                        }
+                    }
+                }
+                newLayerIndex = 0;
+                return 0;
+            }
+
+            int GetIndexFromPaletteIndex(int pIndex)
+            {
+                int offset = 0;
+                for(int i =0; i < layerIndex; i++)
+                {
+                    if (paletteVisibility[i])
+                        offset += atlas.layers[i].layerObjects.Count;
+                }
+                return pIndex + offset;
+            }
         }
 
         void TileRightClickMenu(Event e, TileObject buttonTileObject, TileAtlas atlas)
@@ -718,6 +811,16 @@ namespace elZach.LevelEditor
             }
             if (t.tileSet.TileFromGuid == null || t.tileSet.TileFromGuid.Keys.Count == 0) { EditorGUILayout.HelpBox("Please click 'Dictionary from List' in TileAtlas", MessageType.Warning); return false; }
             return true;
+        }
+
+        void ChangeVerticalScrollbar(float width)
+        {
+            GUI.skin.verticalScrollbar.fixedWidth = width;
+            GUI.skin.verticalScrollbarDownButton.fixedWidth = width;
+            //GUI.skin.verticalScrollbarUpButton.fontSize = 1;
+            //GUI.skin.verticalScrollbarDownButton.fontSize = 1;
+            GUI.skin.verticalScrollbarUpButton.fixedWidth = width;
+            GUI.skin.verticalScrollbarThumb.fixedWidth = width;
         }
 
         void OnFocus()

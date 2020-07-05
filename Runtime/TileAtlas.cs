@@ -34,7 +34,9 @@ namespace elZach.LevelEditor
 
         //[Reorderable]
         public List<TileObject> tiles;
+        [HideInInspector]
         public SerializableDictionary<string, TileObject> TileFromGuid = new SerializableDictionary<string, TileObject>();
+        [HideInInspector]
         public TagLayer defaultLayer = new TagLayer("Default", Color.gray, Vector3.one);
         public List<TagLayer> layers = new List<TagLayer>();
         
