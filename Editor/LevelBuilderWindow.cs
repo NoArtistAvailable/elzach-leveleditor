@@ -62,7 +62,7 @@ namespace elZach.LevelEditor
         {
             get
             {
-                if (_paletteVis == null) _paletteVis = new bool[0];
+                if (_paletteVis == null) _paletteVis = new bool[t.tileSet.layers.Count];
                 if (t && t.layers.Count > 0 && t.layers.Count > _paletteVis.Length)
                 {
                     bool[] biggerBoolArray = new bool[t.layers.Count];
@@ -261,11 +261,12 @@ namespace elZach.LevelEditor
             GUIStyle layerButtonStyle = new GUIStyle("Button");
             layerButtonStyle.alignment = TextAnchor.MiddleLeft;
             Color guiColor = GUI.backgroundColor;
-            for (int i = 0; i < Mathf.Min(t.layers.Count,t.tileSet.layers.Count); i++)
+            for (int i = 0; i < t.tileSet.layers.Count; i++)
             {
                 GUILayout.BeginHorizontal();
                 GUI.backgroundColor = t.tileSet.layers[i].color + (i == layerIndex ? Color.gray : Color.clear);
 
+                if (paletteVisibility.Length == 0) _paletteVis = new bool[t.tileSet.layers.Count];
                 bool paletteVis = paletteVisibility[i];
                 paletteVis = GUILayout.Toggle(paletteVis, icon_palette, "Button", GUILayout.Width(22), GUILayout.Height(19));
                 if (paletteVis != paletteVisibility[i])
@@ -278,6 +279,7 @@ namespace elZach.LevelEditor
                     layerIndex = i;
                     Repaint();
                 }
+                if (layerVisibility.Length == 0) _layerVis = new bool[t.tileSet.layers.Count];
                 bool vis = !layerVisibility[i];
                 vis = GUILayout.Toggle(vis, icon_eye, "Button", GUILayout.Width(30), GUILayout.Height(19));
                 if(vis != !layerVisibility[i])
@@ -285,7 +287,8 @@ namespace elZach.LevelEditor
                     layerVisibility[i] = !vis;
                     t.ToggleLayerActive(vis, i);
                 }
-                GUILayout.Label(t.layers[i].Keys.Count.ToString(), "HelpBox", GUILayout.Height(19));
+                if(t.layers.Count > i && t.layers[i] != null)
+                    GUILayout.Label(t.layers[i].Keys.Count.ToString(), "HelpBox", GUILayout.Height(19));
                 GUILayout.EndHorizontal();
             }
             GUI.backgroundColor = guiColor;
@@ -547,6 +550,7 @@ namespace elZach.LevelEditor
             for (int i = 0; i < atlas.layers.Count; i++)
             {
                 var layer = atlas.layers[i];
+                if(paletteVisibility == null || paletteVisibility.Length ==0) _paletteVis = new bool[t.tileSet.layers.Count];
                 if(paletteVisibility[i] || layer == activeLayer)
                     foreach (var atlasTile in layer.layerObjects)
                     {
@@ -811,7 +815,13 @@ namespace elZach.LevelEditor
                     EditorGUIUtility.PingObject(t.tileSet);
                 return false;
             }
-            if (t.tileSet.TileFromGuid == null || t.tileSet.TileFromGuid.Keys.Count == 0) { EditorGUILayout.HelpBox("Please click 'Dictionary from List' in TileAtlas", MessageType.Warning); return false; }
+            if (t.tileSet.TileFromGuid == null || t.tileSet.TileFromGuid.Keys.Count == 0)
+            {
+                EditorGUILayout.HelpBox("Please click 'Dictionary from List' in TileAtlas", MessageType.Warning);
+                if (GUILayout.Button("Ping Atlas"))
+                    EditorGUIUtility.PingObject(t.tileSet);
+                return false;
+            }
             return true;
         }
 
