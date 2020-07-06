@@ -279,7 +279,7 @@ namespace elZach.LevelEditor
                     layerIndex = i;
                     Repaint();
                 }
-                if (layerVisibility.Length == 0) _layerVis = new bool[t.tileSet.layers.Count];
+                if (layerVisibility.Length <= i) _layerVis = new bool[t.tileSet.layers.Count];
                 bool vis = !layerVisibility[i];
                 vis = GUILayout.Toggle(vis, icon_eye, "Button", GUILayout.Width(30), GUILayout.Height(19));
                 if(vis != !layerVisibility[i])

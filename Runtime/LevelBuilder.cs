@@ -12,11 +12,15 @@ namespace elZach.LevelEditor
     [ExecuteAlways]
     public class LevelBuilder : MonoBehaviour
     {
+
+        [System.Serializable]
+        public class IntTileDictionary : SerializableDictionary<int3,PlacedTile> { }
+
         [Header("Setup")]
         public TileAtlas tileSet;
         public Vector3 floorBoundaries = new Vector3(20, 5, 20);
         [HideInInspector]
-        public List<SerializableDictionary<int3, PlacedTile>> layers = new  List<SerializableDictionary<int3, PlacedTile>>();
+        public List<IntTileDictionary> layers = new  List<IntTileDictionary>();
 
         public int3 FloorSize(TileAtlas.TagLayer layer)
         {
@@ -114,7 +118,7 @@ namespace elZach.LevelEditor
 
             if (layerIndex >= layers.Count)
                 for (int i = 0; i <= layerIndex - layers.Count; i++)
-                    layers.Add(new SerializableDictionary<int3, PlacedTile>());
+                    layers.Add(new IntTileDictionary());
 
             int3 tileSize = atlasTile.GetSize(tagLayer.rasterSize);
             for (int x = 0; x < tileSize.x; x++)
@@ -268,7 +272,7 @@ namespace elZach.LevelEditor
             if (fromIndex >= layers.Count) return;
             if (toIndex >= layers.Count)
                 for (int i = 0; i <= toIndex - layers.Count; i++)
-                    layers.Add(new SerializableDictionary<int3, PlacedTile>());
+                    layers.Add(new IntTileDictionary());
 
             for (int i = 0; i < layers.Count; i++)
             {
