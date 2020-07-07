@@ -109,6 +109,25 @@ namespace elZach.LevelEditor
             return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
         }
 
+        public static List<TileObject> CreateTileObjectsAt(string folderPath, params GameObject[] selectedObjects)
+        {
+            var list = new List<TileObject>();
+            foreach (var prefab in selectedObjects)
+            {
+                string path = folderPath+"/"+prefab.name;//UnityEditor.AssetDatabase.GetAssetPath(prefab);
+                TileObject tile = CreateInstance<TileObject>();
+                tile.prefabs = new GameObject[] { prefab };
+                var behaviour = Resources.Load<TileBehaviour>("TileBehaviours/DefaultTileBehaviour");
+                tile.behaviours = new List<TileBehaviourBase>() { behaviour };
+                tile.CalcBounds();
+                if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
+                UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+                list.Add(UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset"));
+            }
+            return list;
+            //return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
+        }
+
         [Button("Get new guid")]
         public void GetNewGuid()
         {
