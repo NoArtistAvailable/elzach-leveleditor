@@ -38,10 +38,12 @@ namespace elZach.LevelEditor
         }
         static LevelBuilder _t;
         bool painting = true;
+        Vector3 brushRotation = Vector3.zero;
         TileObject selectedTile;
         Plane floorPlane;
         int3 tileMousePosition;
         int targetHeigth = 0;
+        int maximumPreviewImages = 60;
         bool[] _layerVis;
         bool[] layerVisibility { get
             {
@@ -86,6 +88,7 @@ namespace elZach.LevelEditor
             painting = GUILayout.Toggle(painting, "painting","Button");
             EditorGUILayout.LabelField(new GUIContent(layerIndex+":"+paletteIndex),GUILayout.Width(30));
             EditorGUILayout.EndHorizontal();
+            brushRotation = EditorGUILayout.Vector3Field("Brush Direction", brushRotation);
             //if (painting)
             {
                 //if (layerIndex < -1 || layerIndex >= t.tileSet.layers.Count) return;
@@ -206,18 +209,18 @@ namespace elZach.LevelEditor
                 }
                 else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
                     EraseTiles(sceneView, e, tileMousePosition);
-                else if( e.type == EventType.MouseDown && (e.button == 0 || e.button == 1) && e.modifiers == EventModifiers.Shift)
+                else if (e.type == EventType.MouseDown && (e.button == 0 || e.button == 1) && e.modifiers == EventModifiers.Shift)
                 {
                     rectStartTile = tileMousePosition;
                     GUIUtility.hotControl = 0;
                     e.Use();
                 }
-                else if(e.type == EventType.MouseDrag && (e.button == 0 || e.button == 1) && rectStartTile != null && e.modifiers == EventModifiers.Shift)
+                else if (e.type == EventType.MouseDrag && (e.button == 0 || e.button == 1) && rectStartTile != null && e.modifiers == EventModifiers.Shift)
                 {
                     GUIUtility.hotControl = 0;
                     e.Use();
                 }
-                else if( (e.type == EventType.MouseUp) && (e.button == 0 || e.button == 1) && rectStartTile != null)
+                else if ((e.type == EventType.MouseUp) && (e.button == 0 || e.button == 1) && rectStartTile != null)
                 {
                     GUIUtility.hotControl = 0;
                     e.Use();
@@ -225,6 +228,13 @@ namespace elZach.LevelEditor
                     else if (e.button == 1) EraseMultipleTiles(rectStartTile.Value, tileMousePosition);
                     rectStartTile = null;
                 }
+                //else if (e.type == EventType.MouseMove && e.button == 0 && e.modifiers == EventModifiers.Control)
+                //{
+                //    brushRotation += new Vector3(0, e.delta.x, 0);
+                //    GUIUtility.hotControl = 0;
+                //    e.Use();
+                //    Repaint();
+                //}
 
                 lastTileMousePos = tileMousePosition;
             }
@@ -266,7 +276,7 @@ namespace elZach.LevelEditor
                 GUILayout.BeginHorizontal();
                 GUI.backgroundColor = t.tileSet.layers[i].color + (i == layerIndex ? Color.gray : Color.clear);
 
-                if (paletteVisibility.Length == 0) _paletteVis = new bool[t.tileSet.layers.Count];
+                if (paletteVisibility.Length <= i) _paletteVis = new bool[t.tileSet.layers.Count];
                 bool paletteVis = paletteVisibility[i];
                 paletteVis = GUILayout.Toggle(paletteVis, icon_palette, "Button", GUILayout.Width(22), GUILayout.Height(19));
                 if (paletteVis != paletteVisibility[i])
@@ -434,9 +444,17 @@ namespace elZach.LevelEditor
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) { continue; }
-                    Texture2D texture = null;
-                    if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
+                    if (atlas.tiles.Count > maximumPreviewImages)
+                    {
+                        paletteIcons.Add(new GUIContent(atlasTile.name));
+                    }
+                    else
+                    {
+
+                        Texture2D texture = null;
+                        if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
+                        paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
+                    }
                 }
                 if (paletteIcons.Count == 0) EditorGUILayout.HelpBox("No unsorted tiles in atlas",MessageType.Info);
             }
@@ -445,9 +463,16 @@ namespace elZach.LevelEditor
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) continue;
-                    Texture2D texture = null;
-                    if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                    paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
+                    if (activeLayer.layerObjects.Count > maximumPreviewImages)
+                    {
+                        paletteIcons.Add(new GUIContent(atlasTile.name));
+                    }
+                    else
+                    {
+                        Texture2D texture = null;
+                        if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
+                        paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
+                    }
                 }
 
             if (activeLayer != atlas.defaultLayer) paletteIcons.Add(EditorGUIUtility.IconContent("Toolbar Plus"));
@@ -458,7 +483,7 @@ namespace elZach.LevelEditor
             EditorGUILayout.BeginHorizontal();
             GUIStyle iconLabel = new GUIStyle("Label");
             iconLabel.alignment = TextAnchor.UpperCenter;
-            iconLabel.normal.textColor = Color.white;
+            iconLabel.normal.textColor = Color.grey;
             for(int i=0; i < paletteIcons.Count; i++)
             {
                 Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width((position.width - 60) / columnCount));
@@ -556,8 +581,15 @@ namespace elZach.LevelEditor
                     {
                         // Get a preview for the prefab
                         if (!atlasTile || atlasTile.prefabs.Length == 0) continue;
-                        Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
-                        paletteIcons.Add(new GUIContent(texture));
+                        if (layer.layerObjects.Count > maximumPreviewImages)
+                        {
+                            paletteIcons.Add(new GUIContent(atlasTile.name));
+                        }
+                        else
+                        {
+                            Texture2D texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
+                            paletteIcons.Add(new GUIContent(texture));
+                        }
                     }
             }
             Rect screenPaletteBox = GUILayoutUtility.GetRect(40, paletteIcons.Count * 40, "CN Box");
@@ -630,6 +662,12 @@ namespace elZach.LevelEditor
             {
                 Selection.activeObject = buttonTileObject;
             });
+
+            menu.AddItem(new GUIContent("Select linked Prefab"), false, () => 
+            {
+                Selection.activeObject = buttonTileObject.prefabs[0];
+            });
+
             for (int i = 0; i < atlas.layers.Count; i++)
             {
                 if (i == layerIndex) continue;
@@ -736,7 +774,7 @@ namespace elZach.LevelEditor
                 {
                     return;
                 }
-            t.PlaceTile(selectedTileGuid, tilePosition, layerIndex, t.tileSet.layers[layerIndex]);
+            t.PlaceTile(selectedTileGuid, tilePosition, brushRotation, layerIndex, t.tileSet.layers[layerIndex]);
         }
 
         void DrawMultipleTiles(int3 startPosition, int3 endPosition, TileObject tile, TileAtlas.TagLayer layer)
@@ -753,6 +791,7 @@ namespace elZach.LevelEditor
                             x*brushSize.x,
                             0,
                             z*brushSize.z),
+                        brushRotation,
                         layerIndex, layer, true); // <-- turn to false if performance becomes problematic
 
             //t.UpdateMultiple(minPosition - new int3(1, 0, 1), maxPosition + new int3(2,0,2), layerIndex);

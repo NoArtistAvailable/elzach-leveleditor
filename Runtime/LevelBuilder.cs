@@ -106,7 +106,7 @@ namespace elZach.LevelEditor
 
 #if UNITY_EDITOR
 
-        public void PlaceTile(string guid, int3 position, int layerIndex, TileAtlas.TagLayer tagLayer, bool updateNeighbours = true)
+        public void PlaceTile(string guid, int3 position, Vector3 euler, int layerIndex, TileAtlas.TagLayer tagLayer, bool updateNeighbours = true)
         {
             Undo.RegisterCompleteObjectUndo(this, "Created New Tile Object");
             TileObject atlasTile;
@@ -120,28 +120,25 @@ namespace elZach.LevelEditor
                 for (int i = 0; i <= layerIndex - layers.Count; i++)
                     layers.Add(new IntTileDictionary());
 
-            int3 tileSize = atlasTile.GetSize(tagLayer.rasterSize);
-            for (int x = 0; x < tileSize.x; x++)
-                for (int y = 0; y < tileSize.y; y++)
-                    for (int z = 0; z < tileSize.z; z++)
-                    {
-                        PlacedTile alreadyPlaced;
-                        if (layers[layerIndex].TryGetValue(position + new int3(x, y, z), out alreadyPlaced))
-                        {
-                            RemoveTile(alreadyPlaced, layerIndex);
-                        }
-                    }
-            
+            int3 tileSize = atlasTile.GetSize(tagLayer.rasterSize);            
             go.transform.SetParent(transform);
 
             //atlasTile.size
 
             go.transform.localPosition = TilePositionToLocalPosition(position, tileSize, tileSet.layers[layerIndex]);
+            go.transform.localRotation = Quaternion.Euler(euler);
             var placedTile = new PlacedTile(guid, position, atlasTile, go, tagLayer);
             for (int x = 0; x < tileSize.x; x++)
                 for (int y = 0; y < tileSize.y; y++)
                     for (int z = 0; z < tileSize.z; z++)
-                        layers[layerIndex].Add(position + new int3(x, y, z), placedTile);
+                    {
+                        var pos = position + new int3(x, y, z);
+                        PlacedTile alreadyPlaced;
+                        if (layers[layerIndex].TryGetValue(pos, out alreadyPlaced))
+                            RemoveTile(alreadyPlaced, layerIndex);
+                        if (layers[layerIndex].ContainsKey(pos)) layers[layerIndex].Remove(pos);
+                        layers[layerIndex].Add(pos, placedTile);
+                    }
             var neighbs = GetNeighbours(placedTile, layerIndex);
             atlasTile.PlaceBehaviour(placedTile, neighbs);
             if (updateNeighbours)
