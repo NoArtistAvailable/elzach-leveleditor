@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace elZach.LevelEditor
 {
+    [CreateAssetMenu(menuName ="LevelEditor/Default Tile Behaviour")]
     public class TileBehaviour : TileBehaviourBase, ITileBehaviour
     {
         public enum RotationBehaviour { None, RotateRandomY = 1 << 1, RotateRandomY90Degree = 1 << 2, AlignToNeighbours = 1 << 3 }
