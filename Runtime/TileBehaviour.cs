@@ -6,13 +6,14 @@ using UnityEngine;
 namespace elZach.LevelEditor
 {
     [CreateAssetMenu(menuName ="LevelEditor/Default Tile Behaviour")]
-    public class TileBehaviour : TileBehaviourBase, ITileBehaviour
+    public class TileBehaviour : TileBehaviourBase
     {
         public enum RotationBehaviour { None, RotateRandomY = 1 << 1, RotateRandomY90Degree = 1 << 2, AlignToNeighbours = 1 << 3 }
         public RotationBehaviour rotation;
 
         public override void OnPlacement(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
+#if UNITY_EDITOR
             switch (rotation)
             {
                 case RotationBehaviour.RotateRandomY:
@@ -22,17 +23,19 @@ namespace elZach.LevelEditor
                     placedTile.placedObject.transform.localRotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0, 4) * 90f, 0f);
                     break;
                 case RotationBehaviour.AlignToNeighbours:
-                    AlignRotationToNeighbours(placedTile, false ,neighbours);
+                    AlignRotationToNeighbours(placedTile, false, neighbours);
                     break;
             }
+#endif
         }
 
         public override void OnUpdatedNeighbour(PlacedTile placedTile, params PlacedTile[] neighbours)
         {
-            if(rotation == RotationBehaviour.AlignToNeighbours)
-                AlignRotationToNeighbours(placedTile, true ,neighbours);
+#if UNITY_EDITOR
+            if (rotation == RotationBehaviour.AlignToNeighbours)
+                AlignRotationToNeighbours(placedTile, true, neighbours);
+#endif
         }
-
 
 #if UNITY_EDITOR
         public void AlignRotationToNeighbours(PlacedTile placedTile, bool registerUndo = true, params PlacedTile[] neighbours)
