@@ -141,6 +141,8 @@ namespace elZach.LevelEditor
             mesh.SetVertices(verts);
             mesh.SetUVs(0, uvs);
             mesh.SetTriangles(faces, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
             AssetDatabase.CreateAsset(mesh, folderPath + "/meshes/" + sprite.name + ".asset");
             AssetDatabase.SaveAssets();
             GameObject meshHolder = new GameObject();
