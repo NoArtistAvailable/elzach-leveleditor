@@ -49,6 +49,13 @@ namespace elZach.LevelEditor
                     EditorUtility.SetDirty(t);
                 }
             }
+            if(GUILayout.Button("Create Tiles from Spritesheet"))
+            {
+                string path = EditorUtility.OpenFilePanelWithFilters("Spritesheet", "Assets", new string[]{"PNG","png","JPG","jpg","JPEG","jpeg"});
+                t.tiles.AddRange(SpriteTileGenerator.GenerateFromSpriteSheet(path, false));
+                EditorUtility.SetDirty(t);
+            }
+            EditorGUILayout.HelpBox("Drag Tiles, Prefabs or Sprites here (not implemented yet)", MessageType.Info);
         }
 
 

@@ -105,6 +105,7 @@ namespace elZach.LevelEditor
             tile.behaviours = new List<TileBehaviourBase>() { behaviour };
             tile.CalcBounds();
             if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
+            path = path.Insert(path.LastIndexOf("/") + 1, "tile_");
             UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
             return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
         }
@@ -121,6 +122,7 @@ namespace elZach.LevelEditor
                 tile.behaviours = new List<TileBehaviourBase>() { behaviour };
                 tile.CalcBounds();
                 if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
+                path = path.Insert(path.LastIndexOf("/") + 1, "tile_");
                 UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
                 list.Add(UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset"));
             }
@@ -214,7 +216,6 @@ namespace elZach.LevelEditor
             }
             builder.tileSet.GetDictionaryFromList();
         }
-        
 
 #endif
     }
