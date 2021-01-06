@@ -115,7 +115,6 @@ namespace elZach.LevelEditor
 
         public static GameObject PrefabFromSprite(Sprite sprite)
         {
-            Debug.Log("Creating " + sprite.name);
             Texture2D tex = sprite.texture;
             string filePath = AssetDatabase.GetAssetPath(tex);
             string folderPath = filePath.Substring(0, filePath.LastIndexOf("/") + 1) + tex.name;
@@ -154,6 +153,7 @@ namespace elZach.LevelEditor
             GameObject.DestroyImmediate(meshHolder);
 
             AssetDatabase.SaveAssets();
+            Debug.Log("Creating " + sprite.name, go);
             return go;
         }
 
