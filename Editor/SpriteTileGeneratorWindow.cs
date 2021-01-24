@@ -73,28 +73,17 @@ namespace elZach.LevelEditor
                 tileName = targetSprite.name;
             if (tileName != null) tileName = EditorGUILayout.TextField("Tile Name", tileName);
 
-            if (GUILayout.Button("Save as Tile"))
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Save Prefab"))
             {
-                string targetFolder = EditorUtility.OpenFolderPanel("Save Floortile", lastFolder, "");
-                targetFolder = SpriteTileGenerator.EnsureAssetDataPath(targetFolder);
-                lastFolder = targetFolder;
-                //SpriteTileGenerator.PrefabFromSprite(floorSprite, targetFolder);
-                var mat = SpriteTileGenerator.MaterialFromTex(targetSprite.texture, targetFolder);
-                Mesh mesh;
-                switch (tileType) {
-                    case TileType.Block:
-                        mesh = CreateBlockMesh(targetSprite, additionalSprite_top);
-                        break;
-                    case TileType.ThinWall:
-                        mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
-                        TransformMesh(mesh, Quaternion.Euler(270f, 90f, 90f), Vector3.up * 0.5f);
-                        break;
-                    default:
-                        mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
-                        break;
-                }
-                SaveGameobject(mesh, mat, targetFolder, tileName);
+                SaveCurrentGameObject();
             }
+            if (GUILayout.Button("Save As Tile"))
+            {
+                var go = SaveCurrentGameObject();
+                SaveAsTile(go);
+            }
+            EditorGUILayout.EndHorizontal();
 
             if (previewGO)
             {
@@ -103,6 +92,40 @@ namespace elZach.LevelEditor
                     gameObjectEditor = Editor.CreateEditor(previewGO);
                 gameObjectEditor.OnInteractivePreviewGUI(GUILayoutUtility.GetRect(200, 200), bgColor);
             }
+        }
+
+        GameObject SaveCurrentGameObject()
+        {
+            string targetFolder = EditorUtility.OpenFolderPanel("Save Floortile", lastFolder, "");
+            targetFolder = SpriteTileGenerator.EnsureAssetDataPath(targetFolder);
+            lastFolder = targetFolder;
+            //SpriteTileGenerator.PrefabFromSprite(floorSprite, targetFolder);
+            var mat = SpriteTileGenerator.MaterialFromTex(targetSprite.texture, targetFolder);
+            Mesh mesh;
+            switch (tileType)
+            {
+                case TileType.Block:
+                    mesh = CreateBlockMesh(targetSprite, additionalSprite_top);
+                    break;
+                case TileType.ThinWall:
+                    mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
+                    TransformMesh(mesh, Quaternion.Euler(270f, 90f, 90f), Vector3.up * 0.5f);
+                    break;
+                default:
+                    mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
+                    break;
+            }
+            return SaveGameobject(mesh, mat, targetFolder, tileName);
+        }
+
+        void SaveAsTile(GameObject go)
+        {
+            var builder = FindObjectOfType<LevelBuilder>();
+            if (!builder) { Debug.LogWarning("Create a level builder in scene."); return; }
+            if (!builder.tileSet) { Debug.LogWarning("Add a tileatlas to builder."); return; }
+            var newTile = TileObject.CreateNewTileFileFromPrefabs(go);
+            builder.tileSet.tiles.Add(newTile);
+            builder.tileSet.GetDictionaryFromList();
         }
 
         void CreatePreviewObject(Sprite sprite, TileType type)
