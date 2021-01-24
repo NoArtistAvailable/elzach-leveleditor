@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using UnityEngine.Rendering;
 
 namespace elZach.LevelEditor
 {
@@ -16,7 +17,7 @@ namespace elZach.LevelEditor
 
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(filePath);
             string folderPath = filePath.Substring(0, filePath.LastIndexOf("/") + 1) + tex.name;
-            FolderCheck(filePath, tex.name);
+            EnsureFolders(filePath, tex.name);
             Material mat = MaterialFromTex(tex, folderPath);
 
             Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath(filePath).OfType<Sprite>().ToArray();
@@ -82,11 +83,15 @@ namespace elZach.LevelEditor
             return export;
         }
 
-        public static void FolderCheck(string filePath, string texName)
+        public static void EnsureFolders(string fPath, string texName)
         {
+            string filePath = EnsureAssetDataPath(fPath);
+            Debug.Log(filePath + "; "+ filePath.LastIndexOf("/"));
             string folderPath = filePath.Substring(0, filePath.LastIndexOf("/") + 1) + texName;
+            //System.IO.Directory.CreateDirectory
             if (!AssetDatabase.IsValidFolder(folderPath))
             {
+                Debug.Log(filePath.Substring(0, filePath.LastIndexOf("/")));
                 AssetDatabase.CreateFolder(filePath.Substring(0, filePath.LastIndexOf("/")), texName);
                 AssetDatabase.Refresh();
             }
@@ -106,42 +111,24 @@ namespace elZach.LevelEditor
         {
             var mat = AssetDatabase.LoadAssetAtPath<Material>(folderPath + "/" + tex.name + "_material.mat");
             if (mat) return mat;
-            mat = new Material(Shader.Find("Diffuse"));
+            mat = new Material(GraphicsSettings.renderPipelineAsset.defaultMaterial.shader);
             mat.mainTexture = tex;
+            folderPath = EnsureAssetDataPath(folderPath);
+            //EnsureFolders(folderPath + "/" + tex.name + "_material.mat",tex.name);
             AssetDatabase.CreateAsset(mat, folderPath + "/" + tex.name + "_material.mat");
             AssetDatabase.SaveAssets();
             return AssetDatabase.LoadAssetAtPath<Material>(folderPath + "/" + tex.name + "_material.mat");
         }
 
-        public static GameObject PrefabFromSprite(Sprite sprite)
+        public static GameObject PrefabFromSprite(Sprite sprite, string path = null)
         {
             Texture2D tex = sprite.texture;
-            string filePath = AssetDatabase.GetAssetPath(tex);
+            string filePath = path??AssetDatabase.GetAssetPath(tex);
             string folderPath = filePath.Substring(0, filePath.LastIndexOf("/") + 1) + tex.name;
-            FolderCheck(filePath, tex.name);
+            folderPath = EnsureAssetDataPath(folderPath);
+            EnsureFolders(filePath, tex.name);
             var mat = MaterialFromTex(tex, folderPath);
-
-            Vector3[] verts = new Vector3[sprite.vertices.Length];
-            Vector2[] uvs = new Vector2[sprite.uv.Length];
-            for (int i = 0; i < verts.Length; i++)
-            {
-                verts[i] = new Vector3(sprite.vertices[i].x, 0f, sprite.vertices[i].y);
-                uvs[i] = sprite.uv[i];
-            }
-            int[] faces = new int[sprite.triangles.Length];
-            for (int i = 0; i < faces.Length; i++)
-            {
-                //Debug.Log(index + " : face " + sprite.triangles[i]);
-                faces[i] = sprite.triangles[i];// + vertOffset;
-            }
-
-            Mesh mesh = new Mesh();
-            mesh.name = sprite.name;
-            mesh.SetVertices(verts);
-            mesh.SetUVs(0, uvs);
-            mesh.SetTriangles(faces, 0);
-            mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
+            Mesh mesh = CreateMeshFromSprite(sprite);
             AssetDatabase.CreateAsset(mesh, folderPath + "/meshes/" + sprite.name + ".asset");
             AssetDatabase.SaveAssets();
             GameObject meshHolder = new GameObject();
@@ -155,6 +142,31 @@ namespace elZach.LevelEditor
             AssetDatabase.SaveAssets();
             Debug.Log("Creating " + sprite.name, go);
             return go;
+        }
+        
+        public static Mesh CreateMeshFromSprite(Sprite sprite)
+        {
+            Vector3[] verts = new Vector3[sprite.vertices.Length];
+            Vector2[] uvs = new Vector2[sprite.uv.Length];
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = new Vector3(sprite.vertices[i].x, 0f, sprite.vertices[i].y);
+                uvs[i] = sprite.uv[i];
+            }
+            int[] faces = new int[sprite.triangles.Length];
+            for (int i = 0; i < faces.Length; i++)
+            {
+                //Debug.Log(index + " : face " + sprite.triangles[i]);
+                faces[i] = sprite.triangles[i];// + vertOffset;
+            }
+            Mesh mesh = new Mesh();
+            mesh.name = sprite.name;
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(faces, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            return mesh;
         }
 
         public static TileObject TileFromSprite(Sprite sprite)
@@ -217,6 +229,13 @@ namespace elZach.LevelEditor
                 newTiles.Add(TileFromSprite(sprite));
             }
             return newTiles;
+        }
+
+        public static string EnsureAssetDataPath(string path)
+        {
+            if (path.Contains(Application.dataPath))
+                return "Assets" + path.Substring(Application.dataPath.Length);
+            else return path;
         }
     }
 }
