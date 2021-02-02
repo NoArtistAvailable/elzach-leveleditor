@@ -9,12 +9,13 @@ namespace elZach.LevelEditor
 {
     public class SpriteTileGeneratorWindow : EditorWindow
     {
-        public enum TileType { Floor, ThinWall, Block }
+        public enum TileType { Floor, ThinWall, Block, Slope }
         TileType tileType;
 
         string lastFolder = "Assets";
         Sprite targetSprite;
-        Sprite additionalSprite_bottom, additionalSprite_top;
+        Sprite additionalSprite_bottom, additionalSprite_top, additionalSprite_side;
+        float height = 1f;
         string tileName;
         GameObject previewGO;
         Material previewMat;
@@ -38,27 +39,40 @@ namespace elZach.LevelEditor
 
         private void OnGUI()
         {
-            var selectedTileType = (TileType)EditorGUILayout.EnumPopup("Tile Type", tileType);
+            var prevTileType = tileType;
+            tileType = (TileType)EditorGUILayout.EnumPopup("Tile Type", tileType);
             EditorGUILayout.BeginHorizontal();
             if (targetSprite)
             {
                 Rect rect = EditorGUILayout.GetControlRect(GUILayout.MaxWidth(125), GUILayout.MaxHeight(125));
                 DrawSpritePreview(rect, targetSprite);
             }
-            if (tileType == TileType.Block) EditorGUILayout.BeginVertical();
-            Sprite selectedSprite = EditorGUILayout.ObjectField(targetSprite, typeof(Sprite), true) as Sprite;
+            EditorGUILayout.BeginVertical();
+            Sprite prevSprite = targetSprite;
+            targetSprite = EditorGUILayout.ObjectField(targetSprite, typeof(Sprite), true) as Sprite;
 
-            Sprite selectedTop = null;
-            if (tileType == TileType.Block) {
-                selectedTop = EditorGUILayout.ObjectField(additionalSprite_top, typeof(Sprite), true) as Sprite;
-                EditorGUILayout.EndVertical();
-            }
-
-            if (selectedSprite != targetSprite || selectedTileType != tileType || selectedTop != additionalSprite_top)
+            Sprite prevTop = additionalSprite_top;
+            Sprite prevSide = additionalSprite_side;
+            float prevHeight = height;
+            switch (tileType)
             {
-                targetSprite = selectedSprite;
-                tileType = selectedTileType;
-                additionalSprite_top = selectedTop;
+                case TileType.Block:
+                    additionalSprite_top = EditorGUILayout.ObjectField(additionalSprite_top, typeof(Sprite), true) as Sprite;
+                    break;
+                case TileType.Slope:
+                    additionalSprite_side = EditorGUILayout.ObjectField(additionalSprite_side, typeof(Sprite), true) as Sprite;
+                    height = EditorGUILayout.DelayedFloatField("Height: ", height);
+                    break;
+            }
+            EditorGUILayout.EndVertical();
+
+            if (prevSprite != targetSprite || prevTileType != tileType || prevTop != additionalSprite_top || prevSide != additionalSprite_side || prevHeight != height)
+            {
+                prevSprite = targetSprite;
+                prevTileType = tileType;
+                prevTop = additionalSprite_top;
+                prevSide = additionalSprite_side;
+                prevHeight = height;
                 if (previewGO)
                 {
                     DestroyImmediate(previewGO);
@@ -89,7 +103,9 @@ namespace elZach.LevelEditor
             {
                 GUIStyle bgColor = new GUIStyle();
                 if (gameObjectEditor == null)
-                    gameObjectEditor = Editor.CreateEditor(previewGO);
+                {
+                    gameObjectEditor = Editor.CreateEditor(previewGO); // set camera?
+                }
                 gameObjectEditor.OnInteractivePreviewGUI(GUILayoutUtility.GetRect(200, 200), bgColor);
             }
         }
@@ -110,6 +126,9 @@ namespace elZach.LevelEditor
                 case TileType.ThinWall:
                     mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
                     TransformMesh(mesh, Quaternion.Euler(270f, 90f, 90f), Vector3.up * 0.5f);
+                    break;
+                case TileType.Slope:
+                    mesh = CreateSlopeMesh(targetSprite, additionalSprite_side, height);
                     break;
                 default:
                     mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
@@ -147,6 +166,9 @@ namespace elZach.LevelEditor
                 case TileType.Block:
                     previewMesh = CreateBlockMesh(sprite, additionalSprite_top);
                     break;
+                case TileType.Slope:
+                    previewMesh = CreateSlopeMesh(sprite, additionalSprite_side, height);
+                    break;
                 default:
                     previewMesh = SpriteTileGenerator.CreateMeshFromSprite(sprite);
                     break;
@@ -179,6 +201,45 @@ namespace elZach.LevelEditor
             return MeshCombine.CombineMeshes(partials);
         }
 
+        static Mesh CreateSlopeMesh(Sprite sprite, Sprite sideSprite, float height)
+        {
+            //Mesh[] partials = new Mesh[4]; // two quads, two tris
+            Mesh main = SpriteTileGenerator.CreateMeshFromSprite(sprite);
+            Vector3[] verts = main.vertices;
+            for (int i = 0; i <= 1; i++)
+                verts[i] += Vector3.up * height;
+            main.SetVertices(verts);
+            main.RecalculateNormals();
+            main.RecalculateTangents();
+            return main;
+            //return CreatePartialQuad(sprite, height);
+        }
+
+        public static Mesh CreatePartialQuad(Sprite sprite, float height)
+        {
+            Vector3[] verts = new Vector3[sprite.vertices.Length];
+            Vector2[] uvs = new Vector2[sprite.uv.Length];
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = new Vector3(sprite.vertices[i].x, 0f, sprite.vertices[i].y);
+                uvs[i] = sprite.uv[i];
+            }
+            int[] faces = new int[sprite.triangles.Length];
+            for (int i = 0; i < faces.Length; i++)
+            {
+                //Debug.Log(index + " : face " + sprite.triangles[i]);
+                faces[i] = sprite.triangles[i];// + vertOffset;
+            }
+            Mesh mesh = new Mesh();
+            mesh.name = sprite.name;
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(faces, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            return mesh;
+        }
+
         static void TransformMesh(Mesh mesh, Quaternion rot, Vector3 translation)
         {
             var verts = new Vector3[mesh.vertexCount];
@@ -206,6 +267,7 @@ namespace elZach.LevelEditor
 
             AssetDatabase.SaveAssets();
             Debug.Log("Creating " + objectName, go);
+            AssetDatabase.Refresh();
             return go;
         }
 

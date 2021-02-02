@@ -100,6 +100,7 @@ namespace elZach.LevelEditor
 
         public PlacedTile GetTile(int3 pos, int layerIndex)
         {
+            if (layerIndex >= layers.Count) return null;
             layers[layerIndex].TryGetValue(pos, out var foundTile);
             return foundTile;
         }

@@ -8,7 +8,7 @@ namespace elZach.LevelEditor
 {
     public class LevelBuilderWindow : EditorWindow
     {
-        [MenuItem("Window/LevelBuilder")]
+        [MenuItem("Window/LevelBuilder/LevelBuilder")]
         public static void Init()
         {
             LevelBuilderWindow window = (LevelBuilderWindow)EditorWindow.GetWindow(typeof(LevelBuilderWindow));
