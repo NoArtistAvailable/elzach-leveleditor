@@ -61,7 +61,8 @@ namespace elZach.LevelEditor
                     break;
                 case TileType.Slope:
                     additionalSprite_side = EditorGUILayout.ObjectField(additionalSprite_side, typeof(Sprite), true) as Sprite;
-                    height = EditorGUILayout.DelayedFloatField("Height: ", height);
+                    additionalSprite_top = EditorGUILayout.ObjectField(additionalSprite_top, typeof(Sprite), true) as Sprite;
+                    height = EditorGUILayout.FloatField("Height: ", height);
                     break;
             }
             EditorGUILayout.EndVertical();
@@ -128,7 +129,7 @@ namespace elZach.LevelEditor
                     TransformMesh(mesh, Quaternion.Euler(270f, 90f, 90f), Vector3.up * 0.5f);
                     break;
                 case TileType.Slope:
-                    mesh = CreateSlopeMesh(targetSprite, additionalSprite_side, height);
+                    mesh = CreateSlopeMesh(targetSprite, additionalSprite_side, additionalSprite_top, height);
                     break;
                 default:
                     mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
@@ -167,7 +168,7 @@ namespace elZach.LevelEditor
                     previewMesh = CreateBlockMesh(sprite, additionalSprite_top);
                     break;
                 case TileType.Slope:
-                    previewMesh = CreateSlopeMesh(sprite, additionalSprite_side, height);
+                    previewMesh = CreateSlopeMesh(sprite, additionalSprite_side, additionalSprite_top, height);
                     break;
                 default:
                     previewMesh = SpriteTileGenerator.CreateMeshFromSprite(sprite);
@@ -201,9 +202,9 @@ namespace elZach.LevelEditor
             return MeshCombine.CombineMeshes(partials);
         }
 
-        static Mesh CreateSlopeMesh(Sprite sprite, Sprite sideSprite, float height)
+        static Mesh CreateSlopeMesh(Sprite sprite, Sprite sideSprite, Sprite backSprite, float height)
         {
-            //Mesh[] partials = new Mesh[4]; // two quads, two tris
+            //
             Mesh main = SpriteTileGenerator.CreateMeshFromSprite(sprite);
             Vector3[] verts = main.vertices;
             for (int i = 0; i <= 1; i++)
@@ -211,7 +212,32 @@ namespace elZach.LevelEditor
             main.SetVertices(verts);
             main.RecalculateNormals();
             main.RecalculateTangents();
-            return main;
+
+            if (sideSprite)
+            {
+                Mesh[] partials = new Mesh[4]; // two quads, two tris
+                partials[0] = main;
+                partials[1] = CreatePartialQuad(backSprite ?? sideSprite, height);
+                TransformMesh(partials[1],
+                    Quaternion.Euler(270f, 90f, 90f),
+                    new Vector3(0f, 0.5f, 0.5f));
+
+                partials[2] = CreatePartialTris(sideSprite, height);
+                TransformMesh(partials[2],
+                    Quaternion.Euler(90f, 90f, 0f),
+                    new Vector3(0.5f, 0.5f, 0f));
+
+                partials[3] = CreatePartialTris(sideSprite, height);
+                TransformMesh(partials[3],
+                    Quaternion.Euler(90f, 90f, 0f),
+                    new Vector3(-0.5f, 0.5f, 0f));
+
+                partials[3].triangles = new int[] { partials[3].triangles[2], partials[3].triangles[1], partials[3].triangles[0] };
+
+                return MeshCombine.CombineMeshes(partials);
+            }
+            else
+                return main;
             //return CreatePartialQuad(sprite, height);
         }
 
@@ -224,7 +250,37 @@ namespace elZach.LevelEditor
                 verts[i] = new Vector3(sprite.vertices[i].x, 0f, sprite.vertices[i].y);
                 uvs[i] = sprite.uv[i];
             }
+
+            verts[0] = new Vector3(verts[0].x, 0f, height - 0.5f);
+            verts[1] = new Vector3(verts[1].x, 0f, height - 0.5f);
+
             int[] faces = new int[sprite.triangles.Length];
+            for (int i = 0; i < faces.Length; i++)
+            {
+                //Debug.Log(index + " : face " + sprite.triangles[i]);
+                faces[i] = sprite.triangles[i];// + vertOffset;
+            }
+            Mesh mesh = new Mesh();
+            mesh.name = sprite.name;
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(faces, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            return mesh;
+        }
+
+        public static Mesh CreatePartialTris(Sprite sprite, float height)
+        {
+            Vector3[] verts = new Vector3[3];
+            Vector2[] uvs = new Vector2[3];
+            for (int i = 0; i < verts.Length; i++)
+            {
+                verts[i] = new Vector3(sprite.vertices[i].x, 0f, sprite.vertices[i].y);
+                uvs[i] = sprite.uv[i];
+            }
+            verts[2] = new Vector3(verts[2].x, 0f, -height + 0.5f);
+            int[] faces = new int[3];
             for (int i = 0; i < faces.Length; i++)
             {
                 //Debug.Log(index + " : face " + sprite.triangles[i]);
