@@ -151,7 +151,12 @@ namespace elZach.LevelEditor
         void CreatePreviewObject(Sprite sprite, TileType type)
         {
             if (previewGO) DestroyImmediate(previewGO);
-            previewMat = new Material(GraphicsSettings.renderPipelineAsset.defaultMaterial.shader);
+            if (GraphicsSettings.renderPipelineAsset)
+                previewMat = new Material(GraphicsSettings.renderPipelineAsset.defaultMaterial.shader);
+            else
+            {
+                previewMat = new Material(Shader.Find("Standard"));
+            }
             previewMat.mainTexture = sprite.texture;
             previewMat.EnableKeyword("_ALPHATEST_ON");
             Mesh previewMesh;
