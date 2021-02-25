@@ -9,13 +9,15 @@ namespace elZach.LevelEditor
 {
     public class SpriteTileGeneratorWindow : EditorWindow
     {
-        public enum TileType { Floor, ThinWall, Block, Slope }
+        public enum TileType { Floor, ThinWall, Block, Slope, Extrude }
         TileType tileType;
 
         string lastFolder = "Assets";
         Sprite targetSprite;
         Sprite additionalSprite_bottom, additionalSprite_top, additionalSprite_side;
         float height = 1f;
+        List<Vector3> outlinePoints = new List<Vector3>() { new Vector2(50f,50f), new Vector2(150,150) };
+        int activeOutlineIndex = -1;
         string tileName;
         GameObject previewGO;
         Material previewMat;
@@ -46,7 +48,49 @@ namespace elZach.LevelEditor
             {
                 Rect rect = EditorGUILayout.GetControlRect(GUILayout.MaxWidth(125), GUILayout.MaxHeight(125));
                 DrawSpritePreview(rect, targetSprite);
+
+                Vector2 mousePos = Event.current.mousePosition;//EditorGUIUtility.ScreenToGUIPoint(Event.current.mousePosition);
+                Vector3 mouseDelta = Event.current.delta;
+                //drag would change posX,posY + width,heigth
+                for (int i = 0; i < outlinePoints.Count; i++)
+                {
+                    Rect draggableRect = new Rect(outlinePoints[i].x-2.5f, outlinePoints[i].y-2.5f, 5, 5);
+                    EditorGUI.DrawRect(draggableRect, Color.white);
+                    EditorGUIUtility.AddCursorRect(draggableRect, MouseCursor.MoveArrow);
+
+                    if (Event.current.type == EventType.MouseDown)
+                    {
+                        //Debug.Log(mousePos);
+                        if (draggableRect.Contains(mousePos))
+                        {
+                            activeOutlineIndex = i;
+                            Event.current.Use();
+                            break;
+                        }
+                    }else if(Event.current.type == EventType.MouseUp)
+                    {
+                        //Debug.Log(outlinePoints[activeOutlineIndex]);
+                        outlinePoints[activeOutlineIndex] = new Vector3(
+                            Mathf.Round(outlinePoints[activeOutlineIndex].x / (targetSprite.rect.width / 125f)) * (targetSprite.rect.width / 125f), 
+                            outlinePoints[activeOutlineIndex].y, 
+                            0f);
+                        activeOutlineIndex = -1;
+                        Event.current.Use();
+                        break;
+                    }
+                }
+
+                if (activeOutlineIndex >= 0 && activeOutlineIndex < outlinePoints.Count)
+                {
+                    outlinePoints[activeOutlineIndex] += mouseDelta/2f;
+                }
+                //Handles.DrawPolyLine(outlinePoints.ToArray());
+                //Handles.DrawLine(Vector2.zero, new Vector2(100, 100));
+                //Handles.FreeMoveHandle(new Vector3(50, 50), Quaternion.identity, 5f, Vector3.one, Handles.CapFunction());
+                //Handles.DoPositionHandle(Vector3.one * 50, Quaternion.identity);
+                //Handles.PositionHandle(new Vector3(50, 50), Quaternion.identity);
             }
+            
             EditorGUILayout.BeginVertical();
             Sprite prevSprite = targetSprite;
             targetSprite = EditorGUILayout.ObjectField(targetSprite, typeof(Sprite), true) as Sprite;
@@ -63,6 +107,9 @@ namespace elZach.LevelEditor
                     additionalSprite_side = EditorGUILayout.ObjectField(additionalSprite_side, typeof(Sprite), true) as Sprite;
                     additionalSprite_top = EditorGUILayout.ObjectField(additionalSprite_top, typeof(Sprite), true) as Sprite;
                     height = EditorGUILayout.FloatField("Height: ", height);
+                    break;
+                case TileType.Extrude:
+                    height = EditorGUILayout.FloatField("Depth: ", height);
                     break;
             }
             EditorGUILayout.EndVertical();
@@ -109,6 +156,11 @@ namespace elZach.LevelEditor
                 }
                 gameObjectEditor.OnInteractivePreviewGUI(GUILayoutUtility.GetRect(200, 200), bgColor);
             }
+            //if(Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseUp || Event.current.type == EventType.DragExited || Event.current.type == EventType.DragPerform)
+            //    Event.current.Use();
+            Repaint();
+            //if(Event.current.rawType != EventType.Layout && Event.current.rawType != EventType.Repaint)
+            //    Event.current.Use();
         }
 
         GameObject SaveCurrentGameObject()
@@ -169,6 +221,9 @@ namespace elZach.LevelEditor
                     break;
                 case TileType.Slope:
                     previewMesh = CreateSlopeMesh(sprite, additionalSprite_side, additionalSprite_top, height);
+                    break;
+                case TileType.Extrude:
+                    previewMesh = CreateExtrudeMesh(sprite, height);
                     break;
                 default:
                     previewMesh = SpriteTileGenerator.CreateMeshFromSprite(sprite);
@@ -291,6 +346,25 @@ namespace elZach.LevelEditor
             mesh.SetVertices(verts);
             mesh.SetUVs(0, uvs);
             mesh.SetTriangles(faces, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            return mesh;
+        }
+
+        static Mesh CreateExtrudeMesh(Sprite sprite, float depth)
+        {
+            var outline = new List<Vector2>();
+            int count = sprite.GetPhysicsShape(0, outline);
+            //Sprite newSprite = Sprite.Create(sprite.texture, sprite.rect, sprite.pivot, sprite.pixelsPerUnit, 0, SpriteMeshType.Tight, sprite.border, true);
+            //newSprite.phy
+            Triangulator triangulator = new Triangulator(outline.ToArray());
+            var faces = triangulator.Triangulate();
+            Mesh mesh = new Mesh();
+            Vector3[] verts = new Vector3[count];
+            for (int i = 0; i < count; i++)
+                verts[i] = new Vector3(outline[i].x, outline[i].y, 0f);
+            mesh.SetVertices(verts);
+            mesh.SetTriangles(faces,0);
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
             return mesh;
