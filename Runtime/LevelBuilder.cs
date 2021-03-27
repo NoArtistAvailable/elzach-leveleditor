@@ -24,10 +24,15 @@ namespace elZach.LevelEditor
 
         public int3 FloorSize(TileAtlas.TagLayer layer)
         {
+            return FloorSize(layer.rasterSize);
+        }
+
+        public int3 FloorSize(float3 rasterSize)
+        {
             return new int3(
-                Mathf.FloorToInt(floorBoundaries.x / layer.rasterSize.x),
-                Mathf.FloorToInt(floorBoundaries.y / layer.rasterSize.y),
-                Mathf.FloorToInt(floorBoundaries.z / layer.rasterSize.z));
+                Mathf.FloorToInt(floorBoundaries.x / rasterSize.x),
+                Mathf.FloorToInt(floorBoundaries.y / rasterSize.y),
+                Mathf.FloorToInt(floorBoundaries.z / rasterSize.z));
         }
 
         public void ChangeFloorBoundaries(int3 floorSize, TileAtlas.TagLayer layer)

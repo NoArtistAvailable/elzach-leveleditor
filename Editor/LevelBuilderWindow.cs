@@ -22,7 +22,7 @@ namespace elZach.LevelEditor
         {
             get
             {
-                if (!_t)
+                if (!_t || !_t.isActiveAndEnabled)
                 {
                     _t = FindObjectOfType<LevelBuilder>();
                     //if (!_t)
@@ -37,6 +37,11 @@ namespace elZach.LevelEditor
             }
         }
         static LevelBuilder _t;
+        public static void SetActiveLevelbuilder(LevelBuilder input)
+        {
+            _t = input;
+        }
+
         bool painting = true;
         Vector3 brushRotation = Vector3.zero;
         TileObject selectedTile;

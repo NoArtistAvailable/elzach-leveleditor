@@ -49,46 +49,50 @@ namespace elZach.LevelEditor
                 Rect rect = EditorGUILayout.GetControlRect(GUILayout.MaxWidth(125), GUILayout.MaxHeight(125));
                 DrawSpritePreview(rect, targetSprite);
 
-                Vector2 mousePos = Event.current.mousePosition;//EditorGUIUtility.ScreenToGUIPoint(Event.current.mousePosition);
-                Vector3 mouseDelta = Event.current.delta;
-                //drag would change posX,posY + width,heigth
-                for (int i = 0; i < outlinePoints.Count; i++)
+                if (false)
                 {
-                    Rect draggableRect = new Rect(outlinePoints[i].x-2.5f, outlinePoints[i].y-2.5f, 5, 5);
-                    EditorGUI.DrawRect(draggableRect, Color.white);
-                    EditorGUIUtility.AddCursorRect(draggableRect, MouseCursor.MoveArrow);
-
-                    if (Event.current.type == EventType.MouseDown)
+                    Vector2 mousePos = Event.current.mousePosition;//EditorGUIUtility.ScreenToGUIPoint(Event.current.mousePosition);
+                    Vector3 mouseDelta = Event.current.delta;
+                    //drag would change posX,posY + width,heigth
+                    for (int i = 0; i < outlinePoints.Count; i++)
                     {
-                        //Debug.Log(mousePos);
-                        if (draggableRect.Contains(mousePos))
+                        Rect draggableRect = new Rect(outlinePoints[i].x - 2.5f, outlinePoints[i].y - 2.5f, 5, 5);
+                        EditorGUI.DrawRect(draggableRect, Color.white);
+                        EditorGUIUtility.AddCursorRect(draggableRect, MouseCursor.MoveArrow);
+
+                        if (Event.current.type == EventType.MouseDown)
                         {
-                            activeOutlineIndex = i;
+                            //Debug.Log(mousePos);
+                            if (draggableRect.Contains(mousePos))
+                            {
+                                activeOutlineIndex = i;
+                                Event.current.Use();
+                                break;
+                            }
+                        }
+                        else if (Event.current.type == EventType.MouseUp)
+                        {
+                            //Debug.Log(outlinePoints[activeOutlineIndex]);
+                            outlinePoints[activeOutlineIndex] = new Vector3(
+                                Mathf.Round(outlinePoints[activeOutlineIndex].x / (targetSprite.rect.width / 125f)) * (targetSprite.rect.width / 125f),
+                                outlinePoints[activeOutlineIndex].y,
+                                0f);
+                            activeOutlineIndex = -1;
                             Event.current.Use();
                             break;
                         }
-                    }else if(Event.current.type == EventType.MouseUp)
-                    {
-                        //Debug.Log(outlinePoints[activeOutlineIndex]);
-                        outlinePoints[activeOutlineIndex] = new Vector3(
-                            Mathf.Round(outlinePoints[activeOutlineIndex].x / (targetSprite.rect.width / 125f)) * (targetSprite.rect.width / 125f), 
-                            outlinePoints[activeOutlineIndex].y, 
-                            0f);
-                        activeOutlineIndex = -1;
-                        Event.current.Use();
-                        break;
                     }
-                }
 
-                if (activeOutlineIndex >= 0 && activeOutlineIndex < outlinePoints.Count)
-                {
-                    outlinePoints[activeOutlineIndex] += mouseDelta/2f;
+                    if (activeOutlineIndex >= 0 && activeOutlineIndex < outlinePoints.Count)
+                    {
+                        outlinePoints[activeOutlineIndex] += mouseDelta / 2f;
+                    }
+                    //Handles.DrawPolyLine(outlinePoints.ToArray());
+                    //Handles.DrawLine(Vector2.zero, new Vector2(100, 100));
+                    //Handles.FreeMoveHandle(new Vector3(50, 50), Quaternion.identity, 5f, Vector3.one, Handles.CapFunction());
+                    //Handles.DoPositionHandle(Vector3.one * 50, Quaternion.identity);
+                    //Handles.PositionHandle(new Vector3(50, 50), Quaternion.identity);
                 }
-                //Handles.DrawPolyLine(outlinePoints.ToArray());
-                //Handles.DrawLine(Vector2.zero, new Vector2(100, 100));
-                //Handles.FreeMoveHandle(new Vector3(50, 50), Quaternion.identity, 5f, Vector3.one, Handles.CapFunction());
-                //Handles.DoPositionHandle(Vector3.one * 50, Quaternion.identity);
-                //Handles.PositionHandle(new Vector3(50, 50), Quaternion.identity);
             }
             
             EditorGUILayout.BeginVertical();
