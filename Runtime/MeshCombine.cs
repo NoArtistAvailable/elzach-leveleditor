@@ -8,7 +8,8 @@ public class MeshCombine : MonoBehaviour
     public float mergeDistance = 0.01f;
 
 #if UNITY_EDITOR
-    [Button("Combine Child Meshes")]
+    //[Button("Combine Child Meshes")]
+    public Button<MeshCombine> combineChildMeshes = new Button<MeshCombine>(x => x.CombineChildMeshesOnObject());
     public void CombineChildMeshesOnObject()
     {
         Transform parent = transform;
@@ -20,7 +21,8 @@ public class MeshCombine : MonoBehaviour
         UnityEditor.AssetDatabase.SaveAssets();
     }
 
-    [Button("Get Mesh Details")]
+    //[Button("Get Mesh Details")]
+    public Button<MeshCombine> getMeshDetails = new Button<MeshCombine>(x => x.GetMeshDetailsOnObject());
     public void GetMeshDetailsOnObject()
     {
         var filter = GetComponent<MeshFilter>();
