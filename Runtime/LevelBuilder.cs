@@ -21,6 +21,26 @@ namespace elZach.LevelEditor
         public Vector3 floorBoundaries = new Vector3(20, 5, 20);
         [HideInInspector]
         public List<IntTileDictionary> layers = new  List<IntTileDictionary>();
+        [HideInInspector]
+        public bool hierarchyVisibility;
+
+        public Button<LevelBuilder> toggleHierarchyButton =
+            new Button<LevelBuilder>(x => x.ToggleHierarchyVisibility());
+        public void ToggleHierarchyVisibility()
+        {
+#if UNITY_EDITOR
+            var hide = !transform.GetChild(0).hideFlags.HasFlag(HideFlags.HideInHierarchy);
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                var child = transform.GetChild(i).gameObject;
+                if (hide) child.hideFlags |= HideFlags.HideInHierarchy;
+                else child.hideFlags &= ~HideFlags.HideInHierarchy;
+                EditorUtility.SetDirty(child);
+            }
+            EditorUtility.SetDirty(gameObject);
+            EditorApplication.RepaintHierarchyWindow();
+#endif
+        }
 
         public int3 FloorSize(TileAtlas.TagLayer layer)
         {
@@ -128,6 +148,7 @@ namespace elZach.LevelEditor
 
             int3 tileSize = atlasTile.GetSize(tagLayer.rasterSize);            
             go.transform.SetParent(transform);
+            go.hideFlags |= HideFlags.HideInHierarchy;
 
             //atlasTile.size
 
