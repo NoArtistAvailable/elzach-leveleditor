@@ -131,7 +131,7 @@ namespace elZach.LevelEditor
 
             //atlasTile.size
 
-            go.transform.localPosition = TilePositionToLocalPosition(position, tileSize, tileSet.layers[layerIndex]);
+            go.transform.localPosition = TilePositionToLocalPosition(position, tileSize, tileSet.layers[layerIndex]) + atlasTile.offset;
             go.transform.localRotation = Quaternion.Euler(euler);
             var placedTile = new PlacedTile(guid, position, atlasTile, go, tagLayer);
             for (int x = 0; x < tileSize.x; x++)

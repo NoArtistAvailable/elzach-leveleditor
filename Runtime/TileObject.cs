@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 
 namespace elZach.LevelEditor
@@ -37,8 +38,9 @@ namespace elZach.LevelEditor
         public List<TileBehaviourBase> behaviours = new List<TileBehaviourBase>();
         [Header("Size")]
         public Vector3 boundSize = Vector3.one;
+        public Vector3 offset = Vector3.zero;
         public bool roundUp = true;
-        [Button("Calc Bounds")]
+        public Button<TileObject> calcBoundsButton = new Button<TileObject>(x => x.CalcBounds());
         public void CalcBounds()
         {
             Bounds bounds = new Bounds();
@@ -94,7 +96,7 @@ namespace elZach.LevelEditor
 
 #if UNITY_EDITOR
 
-        public static TileObject CreateNewTileFileFromPrefabs(params GameObject[] selectedObjects)
+        public static TileObject CreateNewTileFileFromPrefabs(bool createAsset, params GameObject[] selectedObjects)
         {
             if (selectedObjects.Length == 0) { Debug.LogWarning("[TileObject] cannot create TileObject without gameObject or path"); return null; }
             GameObject prefab = selectedObjects[0]; // as GameObject;
@@ -106,8 +108,16 @@ namespace elZach.LevelEditor
             tile.CalcBounds();
             if (path.Contains(".prefab")) path = path.Replace(".prefab", "");
             path = path.Insert(path.LastIndexOf("/") + 1, "tile_");
-            UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
-            return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
+            if (createAsset)
+            {
+                UnityEditor.AssetDatabase.CreateAsset(tile, path + ".asset");
+                return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
+            }
+            else
+            {
+                tile.name = prefab.name;
+                return tile;
+            }
         }
 
         public static List<TileObject> CreateTileObjectsAt(string folderPath, params GameObject[] selectedObjects)
@@ -130,7 +140,8 @@ namespace elZach.LevelEditor
             //return UnityEditor.AssetDatabase.LoadAssetAtPath<TileObject>(path + ".asset");
         }
 
-        [Button("Get new guid")]
+        //[Button("Get new guid")]
+        public Button<TileObject> getNewGuidButton = new Button<TileObject>(x => x.GetNewGuid());
         public void GetNewGuid()
         {
             guid = System.Guid.NewGuid().ToString();
@@ -138,18 +149,28 @@ namespace elZach.LevelEditor
         }
 
         [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile From Prefab",true)]
-        static bool CreateFromPrefabValidate()
+        static bool CreateFromPrefabAssetsValidate()
         {
             bool valid = UnityEditor.Selection.activeObject is GameObject;
             return valid;
         }
         [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile From Prefab")]
+        static List<TileObject> CreateFromPrefabAssets()
+        {
+            List<TileObject> newTiles = new List<TileObject>();
+            foreach (var selectedObject in UnityEditor.Selection.gameObjects)
+            {
+                newTiles.Add(CreateNewTileFileFromPrefabs(true, selectedObject));
+            }
+            return newTiles;
+        }
+        
         static List<TileObject> CreateFromPrefab()
         {
             List<TileObject> newTiles = new List<TileObject>();
             foreach (var selectedObject in UnityEditor.Selection.gameObjects)
             {
-                newTiles.Add(CreateNewTileFileFromPrefabs(selectedObject));
+                newTiles.Add(CreateNewTileFileFromPrefabs(false, selectedObject));
             }
             return newTiles;
         }
@@ -174,9 +195,14 @@ namespace elZach.LevelEditor
             foreach (var selectedObject in newTiles)
             {
                 if (selectedObject is TileObject)
+                {
+                    selectedObject.name = selectedObject.prefab.name;
+                    AssetDatabase.AddObjectToAsset(selectedObject, builder.tileSet);
                     builder.tileSet.tiles.Add((TileObject)selectedObject as TileObject);
+                }
             }
             builder.tileSet.GetDictionaryFromList();
+            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(builder.tileSet));
         }
 
         [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile and add multiple GameObjects", true)]
@@ -190,7 +216,7 @@ namespace elZach.LevelEditor
         [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Create Tile and add multiple GameObjects")]
         static void CreateMultipleGOTile()
         {
-            CreateNewTileFileFromPrefabs(UnityEditor.Selection.gameObjects);
+            CreateNewTileFileFromPrefabs(true, UnityEditor.Selection.gameObjects);
         }
 
         [UnityEditor.MenuItem("Assets/Create/LevelEditor/Tiles/Add Tile To Current Atlas", true)]
@@ -212,9 +238,13 @@ namespace elZach.LevelEditor
             foreach (var selectedObject in UnityEditor.Selection.objects)
             {
                 if (selectedObject is TileObject)
+                {
+                    AssetDatabase.AddObjectToAsset(selectedObject, builder.tileSet);
                     builder.tileSet.tiles.Add((TileObject)selectedObject as TileObject);
+                }
             }
             builder.tileSet.GetDictionaryFromList();
+            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(builder.tileSet));
         }
 
 #endif

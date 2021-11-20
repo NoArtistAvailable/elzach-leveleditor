@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
 using System.Linq;
+using UnityEditor;
 
 namespace elZach.LevelEditor
 {
@@ -51,7 +52,8 @@ namespace elZach.LevelEditor
         }
 
 #if UNITY_EDITOR
-        [Button("Dictionary From List")]
+        //[Button("Dictionary From List")]
+        public Button<TileAtlas> dictionaryFromList = new Button<TileAtlas>(x => x.GetDictionaryFromList());
         public void GetDictionaryFromList()
         {
             TileFromGuid.Clear();
@@ -103,7 +105,9 @@ namespace elZach.LevelEditor
                     RemoveTileFromLayer(tile, layer);
             TileFromGuid.Remove(tile.guid);
             tiles.Remove(tile);
+            if (AssetDatabase.IsSubAsset(tile)) AssetDatabase.RemoveObjectFromAsset(tile);
             UnityEditor.EditorUtility.SetDirty(this);
+            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(this));
         }
 
         public void RemoveLayer(TagLayer layer)

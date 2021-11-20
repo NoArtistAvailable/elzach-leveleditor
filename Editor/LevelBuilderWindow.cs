@@ -143,7 +143,8 @@ namespace elZach.LevelEditor
                             if (!draggedTile)
                             {
                                 var draggedGameObject = DragAndDrop.objectReferences[i] as GameObject;
-                                draggedTile = TileObject.CreateNewTileFileFromPrefabs(draggedGameObject);
+                                draggedTile = TileObject.CreateNewTileFileFromPrefabs(false, draggedGameObject);
+                                AssetDatabase.AddObjectToAsset(draggedTile, t.tileSet);
                             }
                             t.tileSet.tiles.Add(draggedTile);
                             if (layerIndex != -1)
@@ -154,6 +155,7 @@ namespace elZach.LevelEditor
                         t.tileSet.GetDictionaryFromList();
                         DragAndDrop.AcceptDrag();
                         e.Use();
+                        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t.tileSet));
                     }
                 }
             }
