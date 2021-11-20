@@ -182,6 +182,20 @@ namespace elZach.LevelEditor
         {
             if (painting && activeLayer != t.tileSet.defaultLayer)
             {
+                int controlId = GUIUtility.GetControlID(FocusType.Passive);
+                if (e.control && (e.type == EventType.MouseDown 
+                                  || e.type == EventType.MouseDrag 
+                                  || e.type == EventType.ScrollWheel))
+                {
+                    GUIUtility.hotControl = controlId;
+                    if (e.type == EventType.ScrollWheel)
+                    {
+                        if(e.delta.y > 0) targetHeigth+=1;
+                        else targetHeigth-=1;
+                        e.Use();
+                        GUIUtility.hotControl = 0;
+                    }
+                }
                 if (e.isMouse)
                 {
                     Ray guiRay = HandleUtility.GUIPointToWorldRay(e.mousePosition);
@@ -195,6 +209,12 @@ namespace elZach.LevelEditor
                 }
                 //Handles.DrawWireDisc(t.TilePositionToLocalPosition(tileMousePosition, selectedTile.size), Vector3.up, 0.5f * selectedTile.size.x);
                 Handles.color = activeLayer.color + Color.gray;
+                if (t.GetTile(tileMousePosition, layerIndex) != null)
+                    if (e.modifiers == EventModifiers.Control && !tileMousePosition.Equals(lastTileMousePos))
+                        tileMousePosition = StackedPosition(tileMousePosition, layerIndex);
+                    else 
+                        Handles.color = new Color(1f, 0.1f, 0f);
+                if (e.type == EventType.MouseUp) stackingHeight = null;
                 int3 brushSize = selectedTile ? selectedTile.GetSize(activeLayer.rasterSize) : new int3(1, 1, 1);
                 DrawBrushGizmo(tileMousePosition, brushSize, activeLayer);
                 if (rectStartTile != null && !rectStartTile.Value.Equals(tileMousePosition)) // rectbrush
@@ -207,15 +227,29 @@ namespace elZach.LevelEditor
                                     0,
                                     tileMousePosition.z > rectStartTile.Value.z ? z : -z), brushSize, activeLayer);
                 }
-                if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && e.modifiers == EventModifiers.None)
+                if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && (e.modifiers == EventModifiers.None || e.modifiers == EventModifiers.Control))
                 {
                     if (!tileMousePosition.Equals(lastTileMousePos) || e.type == EventType.MouseDown)
                         DrawTiles(sceneView, e, tileMousePosition, true);
                     else
                         DrawTiles(sceneView, e, tileMousePosition, false);
                 }
-                else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 && e.modifiers == EventModifiers.None)
+                else if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 1 &&
+                    (e.modifiers == EventModifiers.None || e.modifiers == EventModifiers.Control))
+                {
+                    var pos = tileMousePosition;
+                    if (e.modifiers == EventModifiers.Control)
+                    {
+                        int startY = pos.y;
+                        pos = StackedPosition(tileMousePosition, layerIndex, false);
+                        while (pos.y > startY)
+                        {
+                            EraseTiles(sceneView, e, tileMousePosition);
+                            pos.y -= 1;
+                        }
+                    }
                     EraseTiles(sceneView, e, tileMousePosition);
+                }
                 else if (e.type == EventType.MouseDown && (e.button == 0 || e.button == 1) && e.modifiers == EventModifiers.Shift)
                 {
                     rectStartTile = tileMousePosition;
@@ -245,6 +279,18 @@ namespace elZach.LevelEditor
 
                 lastTileMousePos = tileMousePosition;
             }
+        }
+
+        private int? stackingHeight;
+        private int3 StackedPosition(int3 pos, int layer, bool limited = true)
+        {
+            while (t.GetTile(pos, layer) != null)
+            {
+                pos.y += 1;
+                if (limited && stackingHeight != null && pos.y >= stackingHeight) break;
+            }
+            stackingHeight = pos.y;
+            return pos;
         }
 
         void DrawBrushGizmo(int3 brushPosition, int3 brushSize, TileAtlas.TagLayer activeLayer)
