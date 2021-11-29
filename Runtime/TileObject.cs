@@ -39,7 +39,7 @@ namespace elZach.LevelEditor
         [Header("Size")]
         public Vector3 boundSize = Vector3.one;
         public Vector3 offset = Vector3.zero;
-        public bool roundUp = true;
+        public bool roundUp = false;
         public Button<TileObject> calcBoundsButton = new Button<TileObject>(x => x.CalcBounds());
         public void CalcBounds()
         {
