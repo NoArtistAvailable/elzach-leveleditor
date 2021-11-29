@@ -23,16 +23,7 @@ namespace elZach.LevelEditor
             get
             {
                 if (!_t || !_t.isActiveAndEnabled)
-                {
                     _t = FindObjectOfType<LevelBuilder>();
-                    //if (!_t)
-                    //{
-                    //    var go = new GameObject("Level Builder");
-                    //    _t = go.AddComponent<LevelBuilder>();
-                    //    _t.tileSet = ScriptableObject.CreateInstance<TileAtlas>();
-                    //    _t.tileSet.tiles.Add(ScriptableObject.CreateInstance<TileObject>());
-                    //}
-                }
                 return _t;
             }
         }
@@ -48,7 +39,6 @@ namespace elZach.LevelEditor
         Plane floorPlane;
         int3 tileMousePosition;
         int targetHeigth = 0;
-        int maximumPreviewImages = 60;
         bool[] _layerVis;
         bool[] layerVisibility { get
             {
@@ -489,25 +479,32 @@ namespace elZach.LevelEditor
             if (activeLayer!= atlas.defaultLayer && activeLayer.layerObjects.Count == 0) { EditorGUILayout.HelpBox("Drag and Drop Tiles here.", MessageType.Info, true); return; }
 
             //-----
+            EditorGUILayout.Vector2Field("scroll", paletteScroll);
+            float columnCount = 4f;
+            float panelSize = (position.width - 60) / columnCount;
             paletteScroll = EditorGUILayout.BeginScrollView(paletteScroll);
             List<GUIContent> paletteIcons = new List<GUIContent>();
+            float enumerationCount = 0;
             if (activeLayer == atlas.defaultLayer)
             {
                 foreach (var atlasTile in atlas.TileFromGuid.Values)
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) { continue; }
-                    if (atlas.tiles.Count > maximumPreviewImages)
+
+                    Vector2 yValues = new Vector2(Mathf.Floor(enumerationCount / columnCount) * panelSize,
+                        Mathf.Floor(enumerationCount / columnCount) * panelSize + panelSize);
+                    if (yValues.x < paletteScroll.y - panelSize || yValues.y > paletteScroll.y+panelSize*4+panelSize) //(atlas.tiles.Count > maximumPreviewImages)
                     {
                         paletteIcons.Add(new GUIContent(atlasTile.name));
                     }
                     else
                     {
-
                         Texture2D texture = null;
                         if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                         paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
                     }
+                    enumerationCount++;
                 }
                 if (paletteIcons.Count == 0) EditorGUILayout.HelpBox("No unsorted tiles in atlas",MessageType.Info);
             }
@@ -516,9 +513,12 @@ namespace elZach.LevelEditor
                 {
                     // Get a preview for the prefab
                     if (!atlasTile) continue;
-                    if (activeLayer.layerObjects.Count > maximumPreviewImages)
+                    Vector2 yValues = new Vector2(Mathf.Floor(enumerationCount / columnCount) * panelSize,
+                        Mathf.Floor(enumerationCount / columnCount) * panelSize + panelSize);
+                    if (yValues.x < paletteScroll.y - panelSize || yValues.y > paletteScroll.y + panelSize * 4 + panelSize)
                     {
                         paletteIcons.Add(new GUIContent(atlasTile.name));
+                        //paletteIcons.Add(new GUIContent($"{enumerationCount} : {yValues}"));
                     }
                     else
                     {
@@ -526,20 +526,21 @@ namespace elZach.LevelEditor
                         if (atlasTile.prefabs.Length != 0) texture = AssetPreview.GetAssetPreview(atlasTile.prefabs[0]);
                         paletteIcons.Add(texture ? new GUIContent(texture) : new GUIContent("No Preview Available"));
                     }
+                    enumerationCount++;
                 }
 
             if (activeLayer != atlas.defaultLayer) paletteIcons.Add(EditorGUIUtility.IconContent("Toolbar Plus"));
             // Display the grid
             
             //paletteIndex = GUILayout.SelectionGrid(paletteIndex, paletteIcons.ToArray(), 4, GUILayout.Width(position.width-38));
-            float columnCount = 4f;
+            
             EditorGUILayout.BeginHorizontal();
             GUIStyle iconLabel = new GUIStyle("Label");
             iconLabel.alignment = TextAnchor.UpperCenter;
             iconLabel.normal.textColor = Color.grey;
             for(int i=0; i < paletteIcons.Count; i++)
             {
-                Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width((position.width - 60) / columnCount));
+                Rect buttonRect = GUILayoutUtility.GetRect(paletteIcons[i],"Button", GUILayout.Width(panelSize), GUILayout.Height(panelSize));
                 TileObject buttonTileObject = activeLayer == atlas.defaultLayer ? atlas.tiles[i] : i < activeLayer.layerObjects.Count ? activeLayer.layerObjects[i] : null;
                 bool clickHere = false;
                 if (buttonRect.Contains(e.mousePosition))
@@ -624,6 +625,8 @@ namespace elZach.LevelEditor
 
             onScreenPaletteScroll = EditorGUILayout.BeginScrollView(onScreenPaletteScroll,GUILayout.Width(52));
             List<GUIContent> paletteIcons = new List<GUIContent>();
+
+            int maximumPreviewImages = 60;
 
             for (int i = 0; i < atlas.layers.Count; i++)
             {
