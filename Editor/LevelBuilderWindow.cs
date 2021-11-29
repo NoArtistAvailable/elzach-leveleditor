@@ -180,8 +180,8 @@ namespace elZach.LevelEditor
                     GUIUtility.hotControl = controlId;
                     if (e.type == EventType.ScrollWheel)
                     {
-                        if(e.delta.y > 0) targetHeigth+=1;
-                        else targetHeigth-=1;
+                        if(e.delta.y > 0) targetHeigth-=1;
+                        else targetHeigth+=1;
                         e.Use();
                         GUIUtility.hotControl = 0;
                     }
