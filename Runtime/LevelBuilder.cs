@@ -148,7 +148,7 @@ namespace elZach.LevelEditor
 
             int3 tileSize = atlasTile.GetSize(tagLayer.rasterSize);            
             go.transform.SetParent(transform);
-            go.hideFlags |= HideFlags.HideInHierarchy;
+            if(!hierarchyVisibility) go.hideFlags |= HideFlags.HideInHierarchy;
 
             //atlasTile.size
 
