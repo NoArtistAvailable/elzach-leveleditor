@@ -30,7 +30,7 @@ namespace elZach.LevelEditor
         {
 #if UNITY_EDITOR
             var hide = !transform.GetChild(0).hideFlags.HasFlag(HideFlags.HideInHierarchy);
-			hierarchyVisibility = hide;
+			hierarchyVisibility = !hide;
             for (int i = 0; i < transform.childCount; i++)
             {
                 var child = transform.GetChild(i).gameObject;
