@@ -39,6 +39,7 @@ namespace elZach.LevelEditor
         [Header("Size")]
         public Vector3 boundSize = Vector3.one;
         public Vector3 offset = Vector3.zero;
+        public Vector3 offsetRotation = Vector3.zero;
         public bool roundUp = false;
         public Button<TileObject> calcBoundsButton = new Button<TileObject>(x => x.CalcBounds());
         public void CalcBounds()
@@ -78,7 +79,6 @@ namespace elZach.LevelEditor
                     );
         }
 
-        //[Reorderable]
         public Variant[] variants;
         
         public void PlaceBehaviour(PlacedTile placed, params PlacedTile[] neighbours)
@@ -191,6 +191,7 @@ namespace elZach.LevelEditor
             var builder = FindObjectOfType<LevelBuilder>();
             if(!builder) { Debug.LogWarning("Create a level builder in scene."); return; }
             if (!builder.tileSet) { Debug.LogWarning("Add a tileatlas to builder."); return; }
+            if (builder.tileSet.tiles == null) builder.tileSet.tiles = new List<TileObject>();
             var newTiles = CreateFromPrefab();
             foreach (var selectedObject in newTiles)
             {
