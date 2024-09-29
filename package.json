@@ -3,10 +3,10 @@
   "description": "Basic Level Editor for Unity in analog to grid based 2D Editors",
   "author": {
     "name": "elZach",
-    "email": "dont@message.me",
+    "email": "felix.reinemann@gmail.com",
     "url": "-"
   },
-  "version": "0.0.10",
+  "version": "0.0.11",
   "unity": "2019.4",
   "unityRelease": "0f1",
   "displayName": "elZach LevelEditor",
