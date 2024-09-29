@@ -106,6 +106,7 @@ namespace elZach.LevelEditor
             {
                 case TileType.Block:
                     additionalSprite_top = EditorGUILayout.ObjectField(additionalSprite_top, typeof(Sprite), true) as Sprite;
+                    height = EditorGUILayout.FloatField("Height: ", height);
                     break;
                 case TileType.Slope:
                     additionalSprite_side = EditorGUILayout.ObjectField(additionalSprite_side, typeof(Sprite), true) as Sprite;
@@ -178,7 +179,7 @@ namespace elZach.LevelEditor
             switch (tileType)
             {
                 case TileType.Block:
-                    mesh = CreateBlockMesh(targetSprite, additionalSprite_top);
+                    mesh = CreateBlockMesh(targetSprite, additionalSprite_top, height);
                     break;
                 case TileType.ThinWall:
                     mesh = SpriteTileGenerator.CreateMeshFromSprite(targetSprite);
@@ -226,7 +227,7 @@ namespace elZach.LevelEditor
                     TransformMesh(previewMesh, Quaternion.Euler(270f, 90f, 90f), Vector3.up * 0.5f);
                     break;
                 case TileType.Block:
-                    previewMesh = CreateBlockMesh(sprite, additionalSprite_top);
+                    previewMesh = CreateBlockMesh(sprite, additionalSprite_top, height);
                     break;
                 case TileType.Slope:
                     previewMesh = CreateSlopeMesh(sprite, additionalSprite_side, additionalSprite_top, height);
@@ -245,12 +246,12 @@ namespace elZach.LevelEditor
             //return previewGO;
         }
 
-        static Mesh CreateBlockMesh(Sprite sprite, Sprite topSprite)
+        static Mesh CreateBlockMesh(Sprite sprite, Sprite topSprite, float height = 1f)
         {
             Mesh[] partials = new Mesh[5];
             for (int i = 0; i <= 3; i++)
             {
-                partials[i] = SpriteTileGenerator.CreateMeshFromSprite(sprite);
+                partials[i] = CreatePartialQuad(sprite, height);
                 TransformMesh(partials[i],
                     Quaternion.Euler(270f, 90f + 90f * i, 90f),
                     Vector3.up * 0.5f
@@ -261,7 +262,7 @@ namespace elZach.LevelEditor
                 partials[4] = SpriteTileGenerator.CreateMeshFromSprite(topSprite);
                 TransformMesh(partials[4],
                         Quaternion.Euler(0f, 0f, 0f),
-                        Vector3.up * 1f);
+                        Vector3.up * height);
             }
             return MeshCombine.CombineMeshes(partials);
         }
@@ -317,6 +318,13 @@ namespace elZach.LevelEditor
 
             verts[0] = new Vector3(verts[0].x, 0f, height - 0.5f);
             verts[1] = new Vector3(verts[1].x, 0f, height - 0.5f);
+            float uvBottom = uvs[2].y;
+            float uvTop = uvs[0].y;
+            float uvLeft = uvs[0].x;
+            float uvRight = uvs[1].x;
+
+            uvs[0].y = Mathf.Lerp(uvBottom, uvTop, height);
+            uvs[1].y  = Mathf.Lerp(uvBottom, uvTop, height);
 
             int[] faces = new int[sprite.triangles.Length];
             for (int i = 0; i < faces.Length; i++)
