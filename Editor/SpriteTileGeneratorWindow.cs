@@ -208,8 +208,13 @@ namespace elZach.LevelEditor
         void CreatePreviewObject(Sprite sprite, TileType type)
         {
             if (previewGO) DestroyImmediate(previewGO);
+#if UNITY_6000_0_OR_NEWER
+            if (GraphicsSettings.defaultRenderPipeline)
+                previewMat = new Material(GraphicsSettings.defaultRenderPipeline.defaultMaterial.shader);
+#else
             if (GraphicsSettings.renderPipelineAsset)
                 previewMat = new Material(GraphicsSettings.renderPipelineAsset.defaultMaterial.shader);
+#endif
             else
             {
                 previewMat = new Material(Shader.Find("Standard"));

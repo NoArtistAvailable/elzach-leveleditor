@@ -111,8 +111,13 @@ namespace elZach.LevelEditor
         {
             var mat = AssetDatabase.LoadAssetAtPath<Material>(folderPath + "/" + tex.name + "_material.mat");
             if (mat) return mat;
+#if UNITY_6000_0_OR_NEWER
+            if (GraphicsSettings.defaultRenderPipeline)
+                mat = new Material(GraphicsSettings.defaultRenderPipeline.defaultMaterial.shader);
+#else
             if (GraphicsSettings.renderPipelineAsset)
                 mat = new Material(GraphicsSettings.renderPipelineAsset.defaultMaterial.shader);
+#endif
             else mat = new Material(Shader.Find("Standard"));
             mat.mainTexture = tex;
             folderPath = EnsureAssetDataPath(folderPath);
