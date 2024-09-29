@@ -23,7 +23,11 @@ namespace elZach.LevelEditor
             get
             {
                 if (!_t || !_t.isActiveAndEnabled)
+#if UNITY_6000_0_OR_NEWER
+                    _t = FindFirstObjectByType<LevelBuilder>();
+#else
                     _t = FindObjectOfType<LevelBuilder>();
+#endif
                 return _t;
             }
         }

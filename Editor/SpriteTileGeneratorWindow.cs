@@ -197,7 +197,11 @@ namespace elZach.LevelEditor
 
         void SaveAsTile(GameObject go)
         {
+#if UNITY_6000_0_OR_NEWER
+            var builder = FindFirstObjectByType<LevelBuilder>();
+#else
             var builder = FindObjectOfType<LevelBuilder>();
+#endif
             if (!builder) { Debug.LogWarning("Create a level builder in scene."); return; }
             if (!builder.tileSet) { Debug.LogWarning("Add a tileatlas to builder."); return; }
             var newTile = TileObject.CreateNewTileFileFromPrefabs(go);
